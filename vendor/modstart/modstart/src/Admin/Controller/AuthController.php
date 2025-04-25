@@ -70,18 +70,6 @@ class AuthController extends Controller
                     return Response::json(-2, L('Password Required'));
                 }
             }
-            if (config('modstart.admin.login.captcha', false)) {
-                if ($captchaProvider) {
-                    $ret = $captchaProvider->validate();
-                    if (Response::isError($ret)) {
-                        return Response::jsonFromGenerate($ret);
-                    }
-                } else {
-                    if (!CaptchaFacade::check($input->getTrimString('captcha'))) {
-                        return Response::json(-1, L('Captcha Incorrect'), null, "[ijs]$('[data-captcha]').click();");
-                    }
-                }
-            }
             if ($isSmsCaptchaQuickLogin) {
                 /** @var $smsCaptchaProvider \Module\CaptchaSms\Provider\SmsCaptchaProvider */
                 $smsCaptchaProvider = $captchaProvider;
@@ -152,22 +140,14 @@ class AuthController extends Controller
     public function logout()
     {
         $adminUserId = Admin::id();
-        Session::forget(Admin::ADMIN_USER_ID_SESSION_KEY);
-        AdminUserLogoutEvent::fire($adminUserId, Request::ip(), AgentUtil::getUserAgent());
-        if (modstart_config('adminSSOClientEnable', false)) {
-            $input = InputPackage::buildFromInput();
-            if ($input->getTrimString('server', '') != 'true') {
-                $ssoServer = modstart_config('adminSSOServer');
-                if (empty($ssoServer)) {
-                    return Response::send(-1, L('Config adminSSOServer missing'));
-                }
-                $clientRedirect = $input->getTrimString('redirect', '/');
-                $clientLogout = Request::domainUrl() . '/logout?server=true&redirect=' . urlencode($clientRedirect);
-                $ssoServerLogout = $ssoServer . '_logout?redirect=' . urlencode($clientLogout);
-                return Response::redirect($ssoServerLogout);
-            }
+        if ($adminUserId) {
+            Admin::addInfoLog($adminUserId, L('Logout Success'), [
+                'IP' => Request::ip(),
+            ]);
+            AdminUserLogoutEvent::fire($adminUserId, Request::ip(), AgentUtil::getUserAgent());
         }
-        return Response::redirect(modstart_admin_url());
+        Session::forget(Admin::ADMIN_USER_ID_SESSION_KEY);
+        return Response::redirect(modstart_admin_url('login'));
     }
 
     public function ssoClient()
