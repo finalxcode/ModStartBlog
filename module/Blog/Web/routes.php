@@ -16,13 +16,18 @@ $router->group([], function () use ($router) {
 
 // 需要登录的路由
 $authMiddleware = [];
-if (class_exists(\Module\Blog\Member\Middleware\WebAuthMiddleware::class)) {
-    $authMiddleware[] = \Module\Blog\Member\Middleware\WebAuthMiddleware::class;
+if (class_exists(\Module\Member\Middleware\WebAuthMiddleware::class)) {
+    $authMiddleware[] = \Module\Member\Middleware\WebAuthMiddleware::class;
 }
 $router->group([
     'middleware' => $authMiddleware,
 ], function () use ($router) {
-    // 这里添加需要登录才能访问的路由
+    // 会员博客管理
+    $router->match(['get'], 'member_blog', 'MemberBlogController@index');
+    $router->match(['get', 'post'], 'member_blog/add', 'MemberBlogController@add');
+    $router->match(['get', 'post'], 'member_blog/edit/{id}', 'MemberBlogController@edit');
+    $router->match(['post'], 'member_blog/delete', 'MemberBlogController@delete');
+    $router->match(['get'], 'member_blog/admin_add', 'MemberBlogController@adminAdd');
 });
 
 

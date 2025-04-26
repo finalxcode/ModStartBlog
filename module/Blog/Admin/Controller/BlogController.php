@@ -87,6 +87,12 @@ class BlogController extends Controller
                 if ($form->isModeAdd()) {
                     $input = InputPackage::buildFromInput();
                     if ('front' == $input->getTrimString('from')) {
+                        // 如果是会员发布，记录会员ID
+                        $memberUserId = $input->getInteger('memberUserId');
+                        if ($memberUserId > 0) {
+                            $form->item()->memberUserId = $memberUserId;
+                            $form->item()->save();
+                        }
                         return Response::generate(0, '发布成功', null, CRUDUtil::jsDialogCloseAndParentRefresh());
                     }
                 }

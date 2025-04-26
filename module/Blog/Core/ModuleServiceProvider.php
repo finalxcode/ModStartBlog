@@ -144,6 +144,6 @@ class ModuleServiceProvider extends ServiceProvider
      */
     public function register()
     {
-
+        $this->app->register(\Module\Blog\Providers\MemberAdminAuthServiceProvider::class);
     }
 }

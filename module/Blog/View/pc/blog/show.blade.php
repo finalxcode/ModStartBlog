@@ -60,6 +60,22 @@
                         <i class="iconfont icon-time"></i>
                         {{\Carbon\Carbon::parse($record['created_at'])->format('Y-m-d H:i')}}
                         <span>&nbsp;</span>
+                        @if(!empty($record['memberUserId']))
+                            <i class="iconfont icon-user"></i>
+                            @if(modstart_module_enabled('Member'))
+                                @php
+                                    $memberUser = \ModStart\Core\Dao\ModelUtil::get('member_user', $record['memberUserId']);
+                                @endphp
+                                @if(!empty($memberUser))
+                                    {{$memberUser['username']}}
+                                @else
+                                    会员
+                                @endif
+                            @else
+                                会员
+                            @endif
+                            <span>&nbsp;</span>
+                        @endif
                         <i class="iconfont icon-eye"></i>
                         {{$record['clickCount']?:0}}
                         <span>&nbsp;</span>
