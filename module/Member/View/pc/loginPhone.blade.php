@@ -48,7 +48,9 @@
 
         <div class="box" data-member-login-box>
             <div class="nav">
-                <a href="javascript:;" class="active">登录</a>
+                <a href="{{modstart_web_url('login',['redirect'=>empty($redirect)?null:$redirect])}}">账号登录</a>
+                ·
+                <a href="javascript:;" class="active">手机登录</a>
                 @if(!modstart_config('registerDisable',false) && !modstart_config('Member_LoginPhoneAutoRegister', false))
                     ·
                     <a href="{{$__msRoot}}register?redirect={{!empty($redirect)?urlencode($redirect):''}}">注册</a>

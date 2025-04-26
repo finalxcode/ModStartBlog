@@ -383,6 +383,6 @@ class ModuleServiceProvider extends ServiceProvider
      */
     public function register()
     {
-
+        // 不注册OauthServiceProvider，避免第三方登录相关错误
     }
 }
