@@ -20,6 +20,6 @@
     "Notice",
     "TagManager"
   ],
-  "providers": ["\\Module\\Blog\\Member\\MemberServiceProvider"],
+  "providers": [],
   "config": {}
 }

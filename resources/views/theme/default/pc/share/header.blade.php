@@ -1,14 +1,25 @@
 <header class="ub-header-b">
     <div class="ub-container">
         <div class="menu">
-            <a class="item" href="{{modstart_web_url('blog/member/login')}}">
-                <i class="iconfont icon-login"></i>
-                登录
-            </a>
-            <a class="item" href="{{modstart_web_url('blog/member/register')}}">
-                <i class="iconfont icon-plus"></i>
-                注册
-            </a>
+            @if(\Module\Member\Auth\MemberUser::isLogin())
+                <a class="item" href="{{modstart_web_url('member')}}">
+                    <i class="iconfont icon-user"></i>
+                    {{\Module\Member\Auth\MemberUser::get('username')}}
+                </a>
+                <a class="item" href="{{modstart_web_url('logout')}}">
+                    <i class="iconfont icon-exit"></i>
+                    退出
+                </a>
+            @else
+                <a class="item" href="{{modstart_web_url('login')}}">
+                    <i class="iconfont icon-login"></i>
+                    登录
+                </a>
+                <a class="item" href="{{modstart_web_url('register')}}">
+                    <i class="iconfont icon-plus"></i>
+                    注册
+                </a>
+            @endif
         </div>
         <div class="logo">
             <a href="{{modstart_web_url('')}}">

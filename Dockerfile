@@ -11,9 +11,12 @@ RUN apk add --no-cache \
     unzip \
     libzip-dev \
     ttf-dejavu \
-    ttf-freefont
+    ttf-freefont \
+    freetype-dev \
+    libjpeg-turbo-dev
 
 # Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Get Composer 1.10 (compatible with PHP 7.0)
@@ -49,4 +52,4 @@ RUN chown -R www-data:www-data /var/www/html/storage \
 
 RUN chmod -R 775 /var/www/html/storage \
     /var/www/html/bootstrap/cache \
-    /var/www/html/public/vendor/captcha 
+    /var/www/html/public/vendor/captcha

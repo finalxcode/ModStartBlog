@@ -19,7 +19,8 @@ class MemberServiceProvider extends ServiceProvider
         // 为了兼容性，我们也注册一个blog::member前缀
         $this->app['view']->addNamespace('blog', base_path('module/Blog'));
 
-        $this->loadRoutesFrom(__DIR__.'/routes.php');
+        // 手动加载路由
+        require_once __DIR__.'/routes.php';
 
         // 添加视图合成器，在所有视图中添加会员登录状态
         $this->app['view']->composer('*', function ($view) {

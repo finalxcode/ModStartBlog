@@ -37,6 +37,9 @@ return [
         'AigcBase' => [
             'enable' => true,
         ],
+        'Member' => [
+            'enable' => true,
+        ],
         // 'BlogAdminApi' => [
         //     'enable' => true,
         // ],
