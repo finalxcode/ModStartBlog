@@ -1,23 +1,14 @@
 <header class="ub-header-b">
     <div class="ub-container">
         <div class="menu">
-            @if(modstart_module_enabled('Member'))
-                @if(\Module\Member\Auth\MemberUser::id())
-                    <div class="item">
-                        <a href="{{modstart_web_url('member')}}" class="sub-title">
-                            <i class="iconfont icon-user"></i>
-                            {{\Module\Member\Auth\MemberUser::get('username')}}
-                        </a>
-                        <div class="sub-nav">
-                            {!! \Module\Member\Config\MemberNavMenu::render() !!}
-                            <a class="sub-nav-item" href="javascript:;"
-                               data-href="{{modstart_web_url('logout')}}" data-confirm="确认退出登录？">
-                                退出登录
-                            </a>
-                        </div>
-                    </div>
-                @endif
-            @endif
+            <a class="item" href="{{modstart_web_url('blog/member/login')}}">
+                <i class="iconfont icon-login"></i>
+                登录
+            </a>
+            <a class="item" href="{{modstart_web_url('blog/member/register')}}">
+                <i class="iconfont icon-plus"></i>
+                注册
+            </a>
         </div>
         <div class="logo">
             <a href="{{modstart_web_url('')}}">
