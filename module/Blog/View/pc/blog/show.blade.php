@@ -63,9 +63,9 @@
                         @if(!empty($record['memberUserId']))
                             <i class="iconfont icon-user"></i>
                             @if(modstart_module_enabled('Member'))
-                                @php
+                                <?php
                                     $memberUser = \ModStart\Core\Dao\ModelUtil::get('member_user', $record['memberUserId']);
-                                @endphp
+                                ?>
                                 @if(!empty($memberUser))
                                     {{$memberUser['username']}}
                                 @else

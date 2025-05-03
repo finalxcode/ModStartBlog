@@ -4,7 +4,7 @@
             @if(\Module\Member\Auth\MemberUser::isLogin())
                 <a class="item" href="{{modstart_web_url('member')}}">
                     <i class="iconfont icon-user"></i>
-                    {{\Module\Member\Auth\MemberUser::get('username')}}
+                    {{\Module\Member\Auth\MemberUser::viewName()}}
                 </a>
                 <a class="item" href="{{modstart_web_url('logout')}}">
                     <i class="iconfont icon-exit"></i>
