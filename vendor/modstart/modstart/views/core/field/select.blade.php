@@ -16,7 +16,11 @@
                     @if($readonly) disabled @endif>
                 @foreach($options as $k=>$v)
                     @if(isset($v['label']))
-                        <option value="{{$k}}" @if((null===$value&&$k==$defaultValue)||(null!==$value&&$k==$value)) selected @endif @if(isset($v['title'])) title="{{$v['title']}}" @endif>{{$v['label']}}</option>
+                        <option value="{{$k}}"
+                                @if((null===$value&&$k==$defaultValue)||(null!==$value&&$k==$value)) selected @endif
+                                @if(isset($v['title'])) title="{{$v['title']}}" @endif
+                                @if(isset($v['disabled']) && $v['disabled']) disabled @endif
+                        >{{$v['label']}}</option>
                     @else
                         <option value="{{$k}}" @if((null===$value&&$k==$defaultValue)||(null!==$value&&$k==$value)) selected @endif>{{$v}}</option>
                     @endif

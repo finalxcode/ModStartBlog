@@ -124,7 +124,8 @@ class Select extends AbstractField
             $prevLevel = $item->_level;
             $options[$item->{$idName}] = [
                 'label' => $prefix . $item->{$titleName},
-                'title' => join('-', $titles)
+                'title' => join('-', $titles),
+                'disabled' => $item->_level == 1, // 一级分类不可选
             ];
         }
         return $this->options($options);
