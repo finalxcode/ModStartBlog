@@ -38,9 +38,21 @@ class BlogController extends Controller
     protected function crud(AdminCRUDBuilder $builder)
     {
         $updatedCategoryIds = [];
+        $categoryTags = [];
+        $categories = ModelUtil::all('blog_category');
+        foreach ($categories as $cat) {
+            if (!empty($cat['default_tags'])) {
+                $categoryTags[$cat['id']] = array_filter(array_map('trim', explode(',', !empty($cat['default_tags']) ? $cat[ 'default_tags'] : "")));
+            }
+        }
+
+//        dd($categoryTags);
+
+        \ModStart\ModStart::script('window.categoryTags = ' . json_encode($categoryTags) . ';');
+
         $builder
             ->init('blog')
-            ->field(function ($builder) {
+            ->field(function ($builder) use ($categoryTags) {
                 /** @var HasFields $builder */
                 $builder->id('id', 'ID');
                 $builder->select('categoryId', '分类')->optionModelTree('blog_category');
@@ -54,7 +66,7 @@ class BlogController extends Controller
                     })->required();
                 $builder->richHtml('content', '内容')->required();
                 $builder->textarea('summary', '摘要')->listable(false);
-                $builder->tags('tag', '标签')
+                $builder->tags('tag', '标签')->addVariables(['categoryTags' => $categoryTags])
                     ->serializeType(Tags::SERIALIZE_TYPE_COLON_SEPARATED)
                     ->tagModelField('blog', 'tag', Tags::SERIALIZE_TYPE_COLON_SEPARATED);
                 $builder->images('images', '图片')->listable(false);

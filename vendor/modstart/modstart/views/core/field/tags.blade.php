@@ -63,4 +63,51 @@ if(null===$value){
             }
         });
     });
+    window.categoryTags = {!! json_encode($categoryTags) !!};
+
+    $(function () {
+        var $field = $('#{{$id}}');
+        var $tagInput = $('#{{$id}}Tags');
+        var tagify = $tagInput.tagify({
+            whitelist : {!! \ModStart\Core\Util\SerializeUtil::jsonEncode(array_values($tags)) !!},
+            enforceWhitelist: false,
+            dropdown: {
+                maxItems: 20,
+                classname: "tagify-dropdown-list",
+                enabled: 0,
+                closeOnSelect: false
+            },
+            originalInputValueFormat:function(valuesArr){
+                var values = [];
+                for(var i=0;i<valuesArr.length;i++){
+                    values.push(valuesArr[i].value);
+                }
+                @if($serializeType===\ModStart\Field\Tags::SERIALIZE_TYPE_COLON_SEPARATED)
+                if(values.length>0){
+                    return ':'+values.join('::')+':';
+                }
+                return '';
+                @else
+                    return JSON.stringify(values);
+                @endif
+            }
+        }).data('tagify');
+
+        // TODO: 监听分类选择, 这部分是特殊处理的
+        var $category = $('#Field_2Select');
+        if ($category.length && window.categoryTags) {
+            $category.on('change', function () {
+                var categoryId = $(this).val();
+                var tags = window.categoryTags[categoryId] || [];
+                console.log("change ", categoryId, tags);
+                // 更新 tagify 的 whitelist
+                tagify.settings.whitelist = tags;
+                // 清空并设置默认 tag（如只想推荐不自动填充，可注释掉下面两行）
+                tagify.removeAllTags();
+                if (tags.length > 0) {
+                    tagify.addTags(tags);
+                }
+            });
+        }
+    });
 </script>

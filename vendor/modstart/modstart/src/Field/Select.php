@@ -102,6 +102,7 @@ class Select extends AbstractField
     {
         $options = [];
         $options[0] = L('Root');
+        $isAdmin = \ModStart\Admin\Auth\Admin::isLogin();
         if ($treeMaxLevel > 0) {
             $items = $items->filter(function ($item) use ($treeMaxLevel) {
                 return $item->_level <= $treeMaxLevel - 1;
