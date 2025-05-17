@@ -415,97 +415,213 @@
                 <!-- 企业注册表单 -->
                 <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form" data-type="enterprise" style="display:none;">
                     <input type="hidden" name="registerType" value="enterprise">
-                    <div class="line">
-                        <div class="field">
-                            <input type="text" class="form-lg" name="companyName" placeholder="企业名称" />
+                    
+                    <div class="form-group">
+                        <div class="form-group-title">填写账号信息</div>
+                        <div class="form-group-subtitle">注："*"为必填项</div>
+                        
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>企业类型</label>
+                                <div class="field-content">
+                                    <select class="form-lg" name="companyType" required>
+                                        <option value="">请选择企业类型</option>
+                                        <option value="sports_store">运动器材及用品店</option>
+                                        <option value="manufacturer">生产商</option>
+                                        <option value="branch">分公司</option>
+                                        <option value="office">代表处</option>
+                                        <option value="agent">代理商</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>用户名</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="username" required />
+                                    <div class="field-help">不支持汉字，不能以数字开头；建议使用公司名的字母缩写</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>登录密码</label>
+                                <div class="field-content">
+                                    <input type="password" class="form-lg" name="password" required />
+                                    <div class="field-help">密码由6-20个英文字母（区分大小写）或数字组成</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>确认密码</label>
+                                <div class="field-content">
+                                    <input type="password" class="form-lg" name="passwordRepeat" required />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="line">
-                        <div class="field">
-                            <input type="text" class="form-lg" name="businessLicense" placeholder="营业执照号" />
+
+                    <div class="form-group">
+                        <div class="form-group-title">公司基本信息</div>
+                        <div class="form-group-subtitle">含个体工商户，请认真地填写以下信息，严肃的商业信息有助于您获得别人的信任！</div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>企业名称</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="companyName" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>所在地区</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="location" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>企业规模</label>
+                                <div class="field-content">
+                                    <select class="form-lg" name="companySize" required>
+                                        <option value="">请选择企业规模</option>
+                                        <option value="1-10">1-10人</option>
+                                        <option value="11-50">11-50人</option>
+                                        <option value="51-200">51-200人</option>
+                                        <option value="201-500">201-500人</option>
+                                        <option value="501-1000">501-1000人</option>
+                                        <option value="1000+">1000人以上</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>营业额</label>
+                                <div class="field-content">
+                                    <select class="form-lg" name="revenue" required>
+                                        <option value="">请选择年营业额</option>
+                                        <option value="0-100">100万以下</option>
+                                        <option value="100-500">100-500万</option>
+                                        <option value="500-1000">500-1000万</option>
+                                        <option value="1000-5000">1000-5000万</option>
+                                        <option value="5000+">5000万以上</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label>企业简介</label>
+                                <div class="field-content">
+                                    <textarea class="form-lg" name="companyDescription" rows="4"></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="line">
-                        <div class="field">
-                            <input type="text" class="form-lg" name="contactName" placeholder="联系人姓名" />
+
+                    <div class="form-group">
+                        <div class="form-group-title">联系信息</div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>联系人</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="contactName" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>职位</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="contactPosition" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>电话</label>
+                                <div class="field-content">
+                                    <input type="tel" class="form-lg" name="telephone" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>手机</label>
+                                <div class="field-content">
+                                    <input type="tel" class="form-lg" name="phone" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>邮编</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="zipCode" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>通讯地址</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="address" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>常用邮箱</label>
+                                <div class="field-content">
+                                    <input type="email" class="form-lg" name="email" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>公司网址</label>
+                                <div class="field-content">
+                                    <input type="url" class="form-lg" name="website" required />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="line">
-                        <div class="field">
-                            <input type="text" class="form-lg" name="contactPosition" placeholder="联系人职位" />
-                        </div>
-                    </div>
+
                     @include('module::Member.View.pc.inc.registerCaptcha')
                     @if(modstart_config('registerPhoneEnable'))
                         <div class="line">
                             <div class="field">
-                                <div class="row no-gutters">
-                                    <div class="col-7">
-                                        <input type="text" class="form-lg" name="phone" placeholder="输入手机" />
-                                    </div>
-                                    <div class="col-5">
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-generate>获取验证码</button>
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-countdown style="display:none;margin:0;"></button>
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-regenerate style="display:none;margin:0;">重新获取</button>
-                                    </div>
+                                <label><span class="required">*</span>手机验证码</label>
+                                <div class="field-content captcha-group">
+                                    <input type="text" class="form-lg" name="phoneVerify" required />
+                                    <button class="btn btn-round btn-lg" type="button" data-phone-verify-generate>获取验证码</button>
+                                    <button class="btn btn-round btn-lg" type="button" data-phone-verify-countdown style="display:none;margin:0;"></button>
+                                    <button class="btn btn-round btn-lg" type="button" data-phone-verify-regenerate style="display:none;margin:0;">重新获取</button>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="line">
-                            <div class="field">
-                                <input type="text" class="form-lg" name="phoneVerify" placeholder="手机验证码" />
                             </div>
                         </div>
                     @endif
-                    <div class="line">
-                        <div class="field">
-                            <input type="password" class="form-lg" name="password" placeholder="输入密码" />
-                        </div>
-                    </div>
-                    <div class="line">
-                        <div class="field">
-                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" />
-                        </div>
-                    </div>
-                    <div class="line">
-                        <div class="field">
-                            <div class="sports-tags">
-                                <div class="sports-tags-title">选择自己喜欢的运动</div>
-                                <div class="tags">
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="road_running"><span>路跑</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="marathon"><span>马拉松</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="trail_running"><span>越野跑</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="hiking"><span>徒步</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="mountaineering"><span>登山</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="rock_climbing"><span>攀岩</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="ice_climbing"><span>攀冰</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="cycling"><span>骑行</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="roller_skating"><span>轮滑</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="downhill"><span>速降</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="bungee_jumping"><span>蹦极</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="skiing"><span>滑雪</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="ice_skating"><span>滑冰</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="shooting"><span>射击</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="swimming"><span>游泳</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="kayaking"><span>皮划艇</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="diving"><span>潜水</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="water_skiing"><span>滑水</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="sailing"><span>帆船</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="paddleboarding"><span>浆板</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="surfing"><span>冲浪</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="golf"><span>高尔夫</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="badminton"><span>羽毛球</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="table_tennis"><span>乒乓球</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="basketball"><span>篮球</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="football"><span>足球</span></label>
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="tennis"><span>网球</span></label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @foreach(\Module\Member\Provider\RegisterProcessor\MemberRegisterProcessorProvider::listAll() as $provider)
-                        {!! $provider->render() !!}
-                    @endforeach
+
                     <div class="line">
                         <div class="field">
                             <button type="submit" class="btn btn-round btn-primary btn-lg btn-block">提交注册</button>
@@ -703,6 +819,206 @@
             font-size: 12px;
             color: #666;
             margin-top: 10px;
+        }
+
+        /* Enterprise form styles */
+        .enterprise-welcome {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .enterprise-welcome h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .enterprise-welcome p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .section-note {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        .field-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .required {
+            color: #ff4d4f;
+            margin-left: 4px;
+        }
+        select.form-lg {
+            height: 40px;
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        textarea.form-lg {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        /* 基础表单样式 */
+        .register-form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* 表单项容器 */
+        .line {
+            margin-bottom: 20px;
+        }
+        
+        /* 表单字段样式 */
+        .field {
+            position: relative;
+        }
+        
+        /* 标签样式 */
+        .field label {
+            display: inline-block;
+            width: 120px;
+            text-align: right;
+            padding-right: 15px;
+            color: #333;
+            font-size: 14px;
+            line-height: 40px;
+            vertical-align: top;
+        }
+        
+        /* 必填星号 */
+        .required {
+            color: #ff4d4f;
+            margin-right: 4px;
+            font-family: SimSun;
+            font-size: 14px;
+        }
+        
+        /* 输入框容器 */
+        .field-content {
+            display: inline-block;
+            width: calc(100% - 125px);
+            vertical-align: middle;
+        }
+        
+        /* 输入框样式 */
+        .form-lg {
+            width: 100%;
+            height: 40px;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #dcdee2;
+            border-radius: 4px;
+            transition: all .3s;
+        }
+        
+        .form-lg:hover {
+            border-color: #57a3f3;
+        }
+        
+        .form-lg:focus {
+            border-color: #57a3f3;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(45,140,240,.2);
+        }
+        
+        /* 帮助文本 */
+        .field-help {
+            margin-left: 120px;
+            margin-top: 4px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        /* 表单分组样式 */
+        .form-group {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
+        }
+        
+        .form-group-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #17233d;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e8eaec;
+        }
+        
+        .form-group-subtitle {
+            font-size: 12px;
+            color: #808695;
+            margin: -15px 0 20px;
+        }
+        
+        /* 下拉框样式 */
+        select.form-lg {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.762L10.825 4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 24px;
+        }
+        
+        /* 文本域样式 */
+        textarea.form-lg {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* 按钮样式优化 */
+        .btn-block {
+            margin-left: 120px;
+            width: calc(100% - 120px);
+        }
+        
+        /* 验证码区域样式 */
+        .captcha-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .captcha-group input {
+            flex: 1;
+        }
+        
+        .captcha-group button {
+            width: 120px;
+            white-space: nowrap;
         }
     </style>
 @endsection
