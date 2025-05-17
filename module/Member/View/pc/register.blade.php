@@ -685,6 +685,17 @@
             color: #666;
         }
 
+        /* 表单字段通用样式 */
+        .field > label {
+            width: 120px;
+            color: #333;
+            font-size: 14px;
+            line-height: 40px;
+            flex-shrink: 0;
+            text-align: left;
+            padding-right: 15px;
+        }
+
         /* 运动标签样式 */
         .sports-tags {
             padding: 15px;
@@ -702,7 +713,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .tag {
+        .tags label.tag {
             display: inline-flex;
             align-items: center;
             padding: 8px 16px;
@@ -714,20 +725,24 @@
             font-size: 14px;
             color: #666;
             position: relative;
+            width: auto;
+            text-align: left;
+            line-height: normal;
+            flex-shrink: 1;
         }
-        .tag:hover {
+        .tags label.tag:hover {
             border-color: #007bff;
             color: #007bff;
         }
-        .tag.active {
+        .tags label.tag.active {
             background: #e6f3ff;
             color: #007bff;
             border-color: #007bff;
         }
-        .tag input[type="checkbox"] {
+        .tags label.tag input[type="checkbox"] {
             display: none;
         }
-        .tag.active::after {
+        .tags label.tag.active::after {
             content: '';
             position: absolute;
             right: 8px;
@@ -739,26 +754,11 @@
             border-radius: 50%;
             border: 2px solid #fff;
         }
-        .tag.active span {
+        .tags label.tag.active span {
             padding-right: 24px;
         }
 
-        .expert-welcome {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        .expert-welcome h3 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .expert-welcome p {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-        }
+        /* 大神库选择样式 */
         .expert-database {
             padding: 15px;
             background: #f8f9fa;
@@ -767,29 +767,42 @@
         .expert-database-title {
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 15px;
             color: #333;
+            margin-bottom: 15px;
+            text-align: center;
         }
         .expert-database-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
+            width: 100%;
         }
-        .database-item {
+        .expert-database-list label.database-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             padding: 10px;
             background: #fff;
             border: 1px solid #e0e0e0;
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s;
+            width: 100%;
+            text-align: left;
+            line-height: normal;
+            font-weight: normal;
         }
-        .database-item:hover {
+        .expert-database-list label.database-item:hover {
             border-color: #007bff;
         }
-        .database-item input[type="checkbox"] {
-            margin-right: 10px;
+        .expert-database-list label.database-item input[type="checkbox"] {
+            margin: 3px 10px 0 0;
+            flex-shrink: 0;
+        }
+        .expert-database-list label.database-item span {
+            flex: 1;
+            min-width: 0;
+            font-size: 14px;
+            color: #333;
         }
         .certificate-upload {
             padding: 15px;
