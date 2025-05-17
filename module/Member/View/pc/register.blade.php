@@ -122,21 +122,7 @@
                 <!-- 个人注册表单 -->
                 <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form" data-type="personal">
                     <input type="hidden" name="registerType" value="personal">
-                    <div class="line">
-                        <div class="field">
-                            <input type="text" class="form-lg" name="username" placeholder="用户名" />
-                        </div>
-                    </div>
-                    <div class="line">
-                        <div class="field">
-                            <input type="password" class="form-lg" name="password" placeholder="输入密码" />
-                        </div>
-                    </div>
-                    <div class="line">
-                        <div class="field">
-                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" />
-                        </div>
-                    </div>
+                    
                     <div class="line">
                         <div class="field">
                             <div class="sports-tags">
@@ -173,7 +159,45 @@
                             </div>
                         </div>
                     </div>
-                    @include('module::Member.View.pc.inc.registerCaptcha')
+                    <div class="line">
+                        <div class="field">
+                            <input type="text" class="form-lg" name="username" placeholder="用户名" />
+                        </div>
+                    </div>
+                    <div class="line">
+                        <div class="field">
+                            <input type="password" class="form-lg" name="password" placeholder="输入密码" />
+                        </div>
+                    </div>
+                    <div class="line">
+                        <div class="field">
+                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" />
+                        </div>
+                    </div>
+
+                    <!-- @include('module::Member.View.pc.inc.registerCaptcha') -->
+                    <div class="line">
+                        <div class="field">
+                            <div class="row no-gutters">
+                                <div class="col-10">
+                                    <input type="text" class="form-lg" name="captcha" autocomplete="off"
+                                        onfocus="$(this).attr('data-form-process','processing')"
+                                        onblur="__memberCheckCaptcha()" placeholder="图片验证码" />
+                                </div>
+                                <div class="col-2">
+                                    <img class="captcha captcha-lg" data-captcha title="刷新验证"
+                                        onclick="this.src=window.__msRoot+'register/captcha?'+Math.random()"
+                                        src="{{$__msRoot}}register/captcha?{{time()}}" />
+                                </div>
+                            </div>
+                            <div class="help">
+                                <span class="ub-text-muted" data-captcha-status="tip"><i class="iconfont icon-warning"></i> 输入图片验证码验证</span>
+                                <span class="ub-text-muted" data-captcha-status="loading" style="display:none;"><i class="iconfont icon-refresh"></i> 正在验证</span>
+                                <span class="ub-text-success" data-captcha-status="success" style="display:none;"><i class="iconfont icon-checked"></i> 验证通过</span>
+                                <span class="ub-text-danger" data-captcha-status="error" style="display:none;"><i class="iconfont icon-close-o"></i> 验证失败</span>
+                            </div>
+                        </div>
+                    </div>
                     @if(modstart_config('registerPhoneEnable'))
                         <div class="line">
                             <div class="field">
@@ -370,7 +394,43 @@
                         </div>
                     </div>
 
-                    @include('module::Member.View.pc.inc.registerCaptcha')
+                    
+
+                    <div class="line">
+                        <div class="field">
+                            <input type="password" class="form-lg" name="password" placeholder="输入密码" required />
+                        </div>
+                    </div>
+
+                    <div class="line">
+                        <div class="field">
+                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" required />
+                        </div>
+                    </div>
+
+                    <!-- @include('module::Member.View.pc.inc.registerCaptcha') -->
+                    <div class="line">
+                        <div class="field">
+                            <div class="row no-gutters">
+                                <div class="col-10">
+                                    <input type="text" class="form-lg" name="captcha" autocomplete="off"
+                                        onfocus="$(this).attr('data-form-process','processing')"
+                                        onblur="__memberCheckCaptcha()" placeholder="图片验证码" />
+                                </div>
+                                <div class="col-2">
+                                    <img class="captcha captcha-lg" data-captcha title="刷新验证"
+                                        onclick="this.src=window.__msRoot+'register/captcha?'+Math.random()"
+                                        src="{{$__msRoot}}register/captcha?{{time()}}" />
+                                </div>
+                            </div>
+                            <div class="help">
+                                <span class="ub-text-muted" data-captcha-status="tip"><i class="iconfont icon-warning"></i> 输入图片验证码验证</span>
+                                <span class="ub-text-muted" data-captcha-status="loading" style="display:none;"><i class="iconfont icon-refresh"></i> 正在验证</span>
+                                <span class="ub-text-success" data-captcha-status="success" style="display:none;"><i class="iconfont icon-checked"></i> 验证通过</span>
+                                <span class="ub-text-danger" data-captcha-status="error" style="display:none;"><i class="iconfont icon-close-o"></i> 验证失败</span>
+                            </div>
+                        </div>
+                    </div>
                     @if(modstart_config('registerPhoneEnable'))
                         <div class="line">
                             <div class="field">
@@ -392,18 +452,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <div class="line">
-                        <div class="field">
-                            <input type="password" class="form-lg" name="password" placeholder="输入密码" required />
-                        </div>
-                    </div>
-
-                    <div class="line">
-                        <div class="field">
-                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" required />
-                        </div>
-                    </div>
 
                     <div class="line">
                         <div class="field">
@@ -605,9 +653,34 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>图片验证码</label>
+                                <div class="row no-gutters">
+                                    <div class="col-7">
+                                        <input type="text" class="form-lg" name="captcha" autocomplete="off"
+                                            onfocus="$(this).attr('data-form-process','processing')"
+                                            onblur="__memberCheckCaptcha()" placeholder="图片验证码" />
+                                    </div>
+                                    <div class="col-5">
+                                        <img class="captcha captcha-lg" data-captcha title="刷新验证"
+                                            onclick="this.src=window.__msRoot+'register/captcha?'+Math.random()"
+                                            src="{{$__msRoot}}register/captcha?{{time()}}" />
+                                    </div>
+                                </div>
+                                <div class="help">
+                                    <span class="ub-text-muted" data-captcha-status="tip"><i class="iconfont icon-warning"></i> 输入图片验证码验证</span>
+                                    <span class="ub-text-muted" data-captcha-status="loading" style="display:none;"><i class="iconfont icon-refresh"></i> 正在验证</span>
+                                    <span class="ub-text-success" data-captcha-status="success" style="display:none;"><i class="iconfont icon-checked"></i> 验证通过</span>
+                                    <span class="ub-text-danger" data-captcha-status="error" style="display:none;"><i class="iconfont icon-close-o"></i> 验证失败</span>
+                                </div>
+                            </div>
+                        </div>
+                        
                     </div>
 
-                    @include('module::Member.View.pc.inc.registerCaptcha')
+                    <!-- @include('module::Member.View.pc.inc.registerCaptcha')
                     @if(modstart_config('registerPhoneEnable'))
                         <div class="line">
                             <div class="field">
@@ -620,7 +693,7 @@
                                 </div>
                             </div>
                         </div>
-                    @endif
+                    @endif -->
 
                     <div class="line">
                         <div class="field">
