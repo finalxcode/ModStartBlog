@@ -898,38 +898,41 @@
         /* 表单项容器 */
         .line {
             margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
         }
         
         /* 表单字段样式 */
         .field {
             position: relative;
+            width: 100%;
+            display: flex;
+            align-items: flex-start;
         }
         
         /* 标签样式 */
         .field label {
-            display: inline-block;
             width: 120px;
-            text-align: right;
-            padding-right: 15px;
             color: #333;
             font-size: 14px;
             line-height: 40px;
-            vertical-align: top;
+            flex-shrink: 0;
+            text-align: left;
+            padding-right: 15px;
         }
         
         /* 必填星号 */
         .required {
             color: #ff4d4f;
-            margin-right: 4px;
+            margin-right: 2px;
             font-family: SimSun;
             font-size: 14px;
         }
         
         /* 输入框容器 */
         .field-content {
-            display: inline-block;
-            width: calc(100% - 125px);
-            vertical-align: middle;
+            flex: 1;
+            min-width: 0;
         }
         
         /* 输入框样式 */
@@ -941,6 +944,7 @@
             border: 1px solid #dcdee2;
             border-radius: 4px;
             transition: all .3s;
+            background: #fff;
         }
         
         .form-lg:hover {
@@ -955,7 +959,6 @@
         
         /* 帮助文本 */
         .field-help {
-            margin-left: 120px;
             margin-top: 4px;
             color: #999;
             font-size: 12px;
@@ -964,10 +967,8 @@
         /* 表单分组样式 */
         .form-group {
             background: #fff;
-            border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 1px 3px rgba(0,0,0,.1);
         }
         
         .form-group-title {
@@ -1019,6 +1020,14 @@
         .captcha-group button {
             width: 120px;
             white-space: nowrap;
+        }
+
+        /* 注册说明文本 */
+        .register-note {
+            color: #999;
+            font-size: 12px;
+            margin-top: 30px;
+            text-align: center;
         }
     </style>
 @endsection
