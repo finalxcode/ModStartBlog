@@ -227,7 +227,7 @@
                 </form>
 
                 <!-- 大神入驻表单 -->
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form" data-type="expert" style="display:none;">
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;">
                     <input type="hidden" name="registerType" value="expert">
                     
                     <div class="expert-welcome">
@@ -413,7 +413,7 @@
                 </form>
 
                 <!-- 企业注册表单 -->
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form" data-type="enterprise" style="display:none;">
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form enterprise-register-form" data-type="enterprise" style="display:none;">
                     <input type="hidden" name="registerType" value="enterprise">
                     
                     <div class="form-group">
@@ -911,12 +911,16 @@
         /* 表单项容器 */
         .line {
             margin-bottom: 20px;
-            display: flex;
-            align-items: flex-start;
         }
-        
-        /* 表单字段样式 */
-        .field {
+
+        /* 专家注册表单特定样式 */
+        .expert-register-form .field {
+            position: relative;
+            width: 100%;
+        }
+
+        /* 企业注册表单特定样式 */
+        .enterprise-register-form .field {
             position: relative;
             width: 100%;
             display: flex;
