@@ -82,6 +82,51 @@
 
             // 移除所有输入框的验证事件监听
             $('input[name=email], input[name=phone], input[name=captcha]').off('blur change input keyup');
+
+            // 触发证书上传文件选择
+            $('.expert-register-form .upload-area').on('click', function(event) {
+                // 检查事件来源，如果点击的是删除按钮或其内部，则不触发文件输入
+                if (!$(event.target).closest('.remove-file').length) {
+                    $(this).closest('.certificate-upload').find('.certificate-input')[0].click();
+                }
+            });
+
+            // 处理证书文件选择后的显示和删除逻辑
+            $('.expert-register-form .certificate-input').on('change', function() {
+                var files = this.files;
+                var fileListContainer = $('.expert-register-form .upload-area');
+                fileListContainer.find('.certificate-file-item').remove(); 
+
+                if (files.length > 0) {
+                    fileListContainer.find('.upload-tip').hide();
+                    for (var i = 0; i < files.length; i++) {
+                        var file = files[i];
+                        var fileName = file.name;
+                        var fileSize = (file.size / 1024 / 1024).toFixed(2);
+
+                        var fileElement = $('\n                            <div class="certificate-file-item">\n                                <span class="file-name">' + fileName + ' (' + fileSize + ' MB)</span>\n                                <span class="remove-file"><i class="iconfont icon-close"></i></span>\n                            </div>\n                        ');
+
+                        // 将文件数据存储在元素上，以便后续处理（如果需要的话）
+                        // fileElement.data('file', file);
+
+                        fileListContainer.append(fileElement);
+                    }
+                } else {
+                    fileListContainer.find('.upload-tip').show();
+                }
+            });
+
+            // 监听删除按钮点击事件
+            $('.expert-register-form').on('click', '.remove-file', function(event) {
+                event.stopPropagation();
+                event.preventDefault();
+                $(this).closest('.certificate-file-item').remove();
+                if ($('.expert-register-form .certificate-file-item').length === 0) {
+                    $('.expert-register-form .upload-area').find('.upload-tip').show();
+                }
+                // 注意：这里的移除只是移除了显示元素，并没有从 file input 中移除文件
+                // 如果需要真正的文件管理，需要更复杂的逻辑，例如使用 DataTransfer 或维护一个文件数组
+            });
         });
     </script>
     {!! \ModStart\Core\Hook\ModStartHook::fireInView('MemberRegisterPageBodyAppend'); !!}
@@ -363,7 +408,7 @@
                             <div class="certificate-upload">
                                 <div class="certificate-title">上传您的证书</div>
                                 <div class="upload-area">
-                                    <input type="file" name="certificate" accept="image/*,.pdf" class="certificate-input" />
+                                    <input type="file" name="certs[]" multiple accept=".jpg,.png,.pdf" class="certificate-input" />
                                     <div class="upload-tip">支持jpg、png、pdf格式，大小不超过10MB</div>
                                 </div>
                             </div>
@@ -885,9 +930,11 @@
             color: #333;
         }
         .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 15px;
             border: 2px dashed #ddd;
-            padding: 20px;
-            text-align: center;
             border-radius: 4px;
             cursor: pointer;
         }
@@ -900,7 +947,10 @@
         .upload-tip {
             font-size: 12px;
             color: #666;
-            margin-top: 10px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            width: 100%;
         }
 
         /* Enterprise form styles */
@@ -1114,6 +1164,113 @@
             font-size: 12px;
             margin-top: 30px;
             text-align: center;
+        }
+
+        /* 证书文件列表样式 */
+        .certificate-file-list {
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        .certificate-file-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 8px;
+            margin-bottom: 5px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .certificate-file-item .file-name {
+            flex-grow: 1;
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
+            margin-right: 10px;
+        }
+
+        .certificate-file-item .remove-file {
+            color: #f00;
+            cursor: pointer;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .certificate-file-item .remove-file:hover {
+            color: #c00;
+        }
+
+        /* 证书上传区域样式调整 */
+        .certificate-upload .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 15px;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* 证书文件列表项样式 */
+        .certificate-file-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 8px;
+            margin-bottom: 5px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .certificate-file-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .certificate-file-item .file-name {
+            flex-grow: 1;
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
+            margin-right: 10px;
+        }
+
+        .certificate-file-item .remove-file {
+            color: #f00;
+            cursor: pointer;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .certificate-file-item .remove-file:hover {
+            color: #c00;
+        }
+
+        /* 隐藏原有的文件输入框 */
+        .certificate-input {
+            display: none;
+        }
+
+        /* 上传提示样式 */
+        .upload-tip {
+            font-size: 12px;
+            color: #666;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* 当.upload-area中包含证书文件项时，调整.upload-tip的底部外边距 */
+        .upload-area:has(.certificate-file-item) .upload-tip {
+            margin-bottom: 10px;
         }
     </style>
 @endsection
