@@ -657,17 +657,13 @@
                         <div class="line">
                             <div class="field">
                                 <label><span class="required">*</span>图片验证码</label>
-                                <div class="row no-gutters">
-                                    <div class="col-7">
-                                        <input type="text" class="form-lg" name="captcha" autocomplete="off"
-                                            onfocus="$(this).attr('data-form-process','processing')"
-                                            onblur="__memberCheckCaptcha()" placeholder="图片验证码" />
-                                    </div>
-                                    <div class="col-5">
-                                        <img class="captcha captcha-lg" data-captcha title="刷新验证"
-                                            onclick="this.src=window.__msRoot+'register/captcha?'+Math.random()"
-                                            src="{{$__msRoot}}register/captcha?{{time()}}" />
-                                    </div>
+                                <div class="field-content" style="display: flex; align-items: center;">
+                                    <input type="text" class="form-lg" name="captcha" autocomplete="off"
+                                        onfocus="$(this).attr('data-form-process','processing')"
+                                        onblur="__memberCheckCaptcha()" placeholder="图片验证码" style="flex-grow: 1; margin-right: 10px;" />
+                                    <img class="captcha captcha-lg" data-captcha title="刷新验证"
+                                        onclick="this.src='{{$__msRoot}}register/captcha?'+Math.random()"
+                                        src="{{$__msRoot}}register/captcha?{{time()}}" style="height: 40px; width: auto;" />
                                 </div>
                                 <div class="help">
                                     <span class="ub-text-muted" data-captcha-status="tip"><i class="iconfont icon-warning"></i> 输入图片验证码验证</span>

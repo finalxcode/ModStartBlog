@@ -1,4 +1,4 @@
 {
-    "editor.fontFamily": "'Maple Mono ExtraLight', Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontFamily": "'mononoki','Maple Mono ExtraLight', Menlo, Monaco, 'Courier New', monospace",
     "editor.fontSize": 16
 }
