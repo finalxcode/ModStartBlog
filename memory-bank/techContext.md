@@ -11,6 +11,7 @@ This document details the technologies used in the project, the development setu
 
 - [ ] Describe how to set up the development environment
 - [ ] List required tools and configurations
+- The project is deployed using `docker-compose` from the root directory.
 
 **Technical Constraints:**
 

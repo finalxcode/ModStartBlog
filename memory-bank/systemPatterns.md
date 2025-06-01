@@ -6,6 +6,7 @@ This document describes the overall system architecture, key technical decisions
 
 - [ ] Describe the high-level architecture (e.g., Monolithic, Microservices)
 - [ ] Illustrate key components and their interactions (diagrams are helpful)
+- The application is deployed using `docker-compose` from the root directory, orchestrating the necessary services.
 
 **Technical Decisions:**
 
