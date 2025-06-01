@@ -102,7 +102,6 @@ class Select extends AbstractField
     {
         $options = [];
         $options[0] = L('Root');
-        $isAdmin = \ModStart\Admin\Auth\Admin::isLogin();
         if ($treeMaxLevel > 0) {
             $items = $items->filter(function ($item) use ($treeMaxLevel) {
                 return $item->_level <= $treeMaxLevel - 1;
@@ -125,8 +124,7 @@ class Select extends AbstractField
             $prevLevel = $item->_level;
             $options[$item->{$idName}] = [
                 'label' => $prefix . $item->{$titleName},
-                'title' => join('-', $titles),
-                'disabled' => $item->_level == 1, // 一级分类不可选
+                'title' => join('-', $titles)
             ];
         }
         return $this->options($options);

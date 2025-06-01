@@ -14,7 +14,7 @@ class Create{{tableClassName}}Table extends Migration
     {
         Schema::create('{{table}}', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('queue', 100);
+            $table->string('queue');
             $table->longText('payload');
             $table->tinyInteger('attempts')->unsigned();
             $table->tinyInteger('reserved')->unsigned();

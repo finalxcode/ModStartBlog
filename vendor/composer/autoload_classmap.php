@@ -8,7 +8,6 @@ $baseDir = dirname($vendorDir);
 return array(
     'ArithmeticError' => $vendorDir . '/symfony/polyfill-php70/Resources/stubs/ArithmeticError.php',
     'AssertionError' => $vendorDir . '/symfony/polyfill-php70/Resources/stubs/AssertionError.php',
-    'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'CreateAdmin' => $baseDir . '/database/migrations/2015_12_18_164253_create_admin.php',
     'CreateAdminLog' => $baseDir . '/database/migrations/2018_06_08_000000_create_admin_log.php',
     'CreateAdminUpload' => $baseDir . '/database/migrations/2017_05_12_000000_create_admin_upload.php',

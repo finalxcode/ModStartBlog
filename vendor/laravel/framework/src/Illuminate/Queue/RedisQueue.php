@@ -176,19 +176,6 @@ class RedisQueue extends Queue implements QueueContract
      */
     public function migrateExpiredJobs($from, $to)
     {
-        $script = "
-local val = redis.call('zrangebyscore', KEYS[1], '-inf', ARGV[1], 'limit', 0, ARGV[2])
-if(next(val) ~= nil) then
-    redis.call('zremrangebyrank', KEYS[1], 0, #val - 1)
-    for i = 1, #val, 100 do
-        redis.call('rpush', KEYS[2], unpack(val, i, math.min(i+99, #val)))
-    end
-end
-return val
-";
-        $this->getConnection()->eval($script, 2, $from, $to, time(), 100);
-
-        /*
         $options = ['cas' => true, 'watch' => $from, 'retry' => 10];
 
         $this->getConnection()->transaction($options, function ($transaction) use ($from, $to) {
@@ -208,7 +195,6 @@ return val
                 $this->pushExpiredJobsOntoNewQueue($transaction, $to, $jobs);
             }
         });
-        */
     }
 
     /**

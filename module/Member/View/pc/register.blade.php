@@ -16,7 +16,7 @@
     {{\ModStart\ModStart::js('vendor/Member/entry/register.js')}}
     <script>
         $(function () {
-            var needCaptcha = {!! \Module\Member\Util\SecurityUtil::registerCaptchaProvider() ? 'false' : 'true' !!};
+            var needCaptcha = {!! \Module\Member\Util\SecurityUtil::registerCaptchaProvider() ? false : true !!};
             
             // 注册类型切换
             $('.register-type-item').click(function(){
@@ -127,6 +127,42 @@
                 // 注意：这里的移除只是移除了显示元素，并没有从 file input 中移除文件
                 // 如果需要真正的文件管理，需要更复杂的逻辑，例如使用 DataTransfer 或维护一个文件数组
             });
+
+            // Test submit button handler
+            $('#test-submit-btn').on('click', function() {
+                $('.expert-register-form').submit();
+            });
+
+            // Debugging: Log captcha input changes and form submission
+            $('input[name=captcha]').on('input change', function() {
+                console.log('Captcha input changed:', $(this).val());
+            });
+
+            $('form[data-ajax-form]').on('submit', function(e) {
+                console.log('Form submit event triggered.');
+                // Temporarily remove required from captcha to see if it's the issue
+                $('input[name=captcha]').removeAttr('required');
+
+                // Check if the default submission is prevented
+                if (e.isDefaultPrevented()) {
+                    console.log('Default form submission was prevented.');
+                    // Attempt to prevent default prevention for debugging
+                    // e.preventDefault = function() { console.log("PreventDefault called, but ignored."); };
+                    // e.stopPropagation();
+                    // Try to force submit if default is prevented
+                    console.log('Attempting to force form submission.');
+                    // Remove event listeners that might be calling preventDefault
+                    $(this).off('submit');
+                    // Trigger native form submission
+                    this.submit();
+                    
+                    // Re-add required after attempt
+                    $('input[name=captcha]').attr('required', 'required');
+
+                } else {
+                    console.log('Default form submission is NOT prevented.');
+                }
+            });
         });
     </script>
     {!! \ModStart\Core\Hook\ModStartHook::fireInView('MemberRegisterPageBodyAppend'); !!}
@@ -173,7 +209,7 @@
                             <div class="sports-tags">
                                 <div class="sports-tags-title">选择自己喜欢的运动</div>
                                 <div class="tags">
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="road_running"><span>路跑</span></label>
+                                    <label class="tag"><input type="checkbox" name="sports[]" value="road_running" checked><span>路跑</span></label>
                                     <label class="tag"><input type="checkbox" name="sports[]" value="marathon"><span>马拉松</span></label>
                                     <label class="tag"><input type="checkbox" name="sports[]" value="trail_running"><span>越野跑</span></label>
                                     <label class="tag"><input type="checkbox" name="sports[]" value="hiking"><span>徒步</span></label>
@@ -206,28 +242,28 @@
                     </div>
                     <div class="line">
                         <div class="field">
-                            <input type="text" class="form-lg" name="username" placeholder="用户名" />
+                            <input type="text" class="form-lg" name="username" placeholder="用户名" value="test_user_personal" />
                         </div>
                     </div>
                     <div class="line">
                         <div class="field">
-                            <input type="password" class="form-lg" name="password" placeholder="输入密码" />
+                            <input type="password" class="form-lg" name="password" placeholder="输入密码" value="password123" />
                         </div>
                     </div>
                     <div class="line">
                         <div class="field">
-                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" />
+                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" value="password123" />
                         </div>
                     </div>
 
                     <!-- @include('module::Member.View.pc.inc.registerCaptcha') -->
-                    <div class="line">
+                    <div class="line" id="captcha-line">
                         <div class="field">
                             <div class="row no-gutters">
                                 <div class="col-10">
                                     <input type="text" class="form-lg" name="captcha" autocomplete="off"
                                         onfocus="$(this).attr('data-form-process','processing')"
-                                        onblur="__memberCheckCaptcha()" placeholder="图片验证码" />
+                                        placeholder="图片验证码" />
                                 </div>
                                 <div class="col-2">
                                     <img class="captcha captcha-lg" data-captcha title="刷新验证"
@@ -248,7 +284,7 @@
                             <div class="field">
                                 <div class="row no-gutters">
                                     <div class="col-7">
-                                        <input type="text" class="form-lg" name="phone" placeholder="输入手机" />
+                                        <input type="text" class="form-lg" name="phone" placeholder="输入手机" value="13800138000" />
                                     </div>
                                     <div class="col-5">
                                         <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-generate>获取验证码</button>
@@ -269,7 +305,7 @@
                             <div class="field">
                                 <div class="row no-gutters">
                                     <div class="col-7">
-                                        <input type="text" class="form-lg" name="email" placeholder="输入邮箱" />
+                                        <input type="text" class="form-lg" name="email" placeholder="输入邮箱" value="test@example.com" />
                                     </div>
                                     <div class="col-5">
                                         <button class="btn btn-round btn-lg btn-block" type="button" data-email-verify-generate>获取验证码</button>
@@ -296,7 +332,7 @@
                 </form>
 
                 <!-- 大神入驻表单 -->
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;">
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">
                     <input type="hidden" name="registerType" value="expert">
                     
                     <div class="expert-welcome">
@@ -309,7 +345,7 @@
                             <div class="sports-tags">
                                 <div class="sports-tags-title">选择自己喜欢的运动</div>
                                 <div class="tags">
-                                    <label class="tag"><input type="checkbox" name="sports[]" value="road_running"><span>路跑</span></label>
+                                    <label class="tag"><input type="checkbox" name="sports[]" value="road_running" checked><span>路跑</span></label>
                                     <label class="tag"><input type="checkbox" name="sports[]" value="marathon"><span>马拉松</span></label>
                                     <label class="tag"><input type="checkbox" name="sports[]" value="trail_running"><span>越野跑</span></label>
                                     <label class="tag"><input type="checkbox" name="sports[]" value="hiking"><span>徒步</span></label>
@@ -346,58 +382,19 @@
                             <div class="expert-database">
                                 <div class="expert-database-title">选择您要录入的大神库</div>
                                 <div class="expert-database-list">
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="marathon_sub3">
-                                        <span>中国马拉松破三跑者库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="ultra_100k">
-                                        <span>中国百公里越野赛跑者库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="cycling_level3">
-                                        <span>达到国家三级运动员水平骑者库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="roller_level3">
-                                        <span>达到国家三级运动员标准轮滑大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="downhill_level3">
-                                        <span>达到国家三级运动员标准速降大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="mountaineering_level3">
-                                        <span>达到国家三级运动员标准登山大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="rock_climbing_level3">
-                                        <span>达到国家三级运动员标准攀岩大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="swimming_level3">
-                                        <span>达到国家三级运动员标准游泳大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="kayaking_level3">
-                                        <span>达到国家三级运动员标准皮划艇大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="diving_level3">
-                                        <span>达到国家三级运动员标准潜水大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="ice_climbing_level3">
-                                        <span>达到国家三级运动员标准攀冰大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="skiing_level3">
-                                        <span>达到国家三级运动员标准滑雪大神库</span>
-                                    </label>
-                                    <label class="database-item">
-                                        <input type="checkbox" name="expert_database[]" value="ice_skating_level3">
-                                        <span>达到国家三级运动员标准滑冰大神库</span>
-                                    </label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="marathon_sub3" checked><span>中国马拉松破三跑者库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="ultra_100k"><span>中国百公里越野赛跑者库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="cycling_level3"><span>达到国家三级运动员水平骑者库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="roller_level3"><span>达到国家三级运动员标准轮滑大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="downhill_level3"><span>达到国家三级运动员标准速降大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="mountaineering_level3"><span>达到国家三级运动员标准登山大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="rock_climbing_level3"><span>达到国家三级运动员标准攀岩大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="swimming_level3"><span>达到国家三级运动员标准游泳大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="kayaking_level3"><span>达到国家三级运动员标准皮划艇大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="diving_level3"><span>达到国家三级运动员标准潜水大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="ice_climbing_level3"><span>达到国家三级运动员标准攀冰大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="skiing_level3"><span>达到国家三级运动员标准滑雪大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="ice_skating_level3"><span>达到国家三级运动员标准滑冰大神库</span></label>
                                 </div>
                             </div>
                         </div>
@@ -417,50 +414,54 @@
 
                     <div class="line">
                         <div class="field">
-                            <input type="text" class="form-lg" name="realName" placeholder="姓名（必填）" required />
+                            <input type="text" class="form-lg" name="realName" placeholder="姓名（必填）" required value="测试大神" />
                         </div>
                     </div>
 
                     <div class="line">
                         <div class="field">
-                            <input type="email" class="form-lg" name="email" placeholder="常用邮箱（必填）" required style="width: 100%;" />
+                            <input type="email" class="form-lg" name="email" placeholder="常用邮箱（必填）" required style="width: 100%;" value="expert@example.com" />
                         </div>
                     </div>
 
                     <div class="line">
                         <div class="field">
-                            <input type="text" class="form-lg" name="location" placeholder="所在地区（必填）" required />
+                            <input type="text" class="form-lg" name="location" placeholder="所在地区（必填）" required value="测试地区" />
                         </div>
                     </div>
 
                     <div class="line">
                         <div class="field">
-                            <input type="text" class="form-lg" name="contactName" placeholder="联系信息（姓名须与证书一致）" required />
-                        </div>
-                    </div>
-
-                    
-
-                    <div class="line">
-                        <div class="field">
-                            <input type="password" class="form-lg" name="password" placeholder="输入密码" required />
+                            <input type="text" class="form-lg" name="contactName" placeholder="联系信息（姓名须与证书一致）" required value="测试联系人" />
                         </div>
                     </div>
 
                     <div class="line">
                         <div class="field">
-                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" required />
+                            <input type="text" class="form-lg" name="username" placeholder="用户名（必填）" required value="test_expert_user" />
+                        </div>
+                    </div>
+
+                    <div class="line">
+                        <div class="field">
+                            <input type="password" class="form-lg" name="password" placeholder="输入密码" required value="password123" />
+                        </div>
+                    </div>
+
+                    <div class="line">
+                        <div class="field">
+                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" required value="password123" />
                         </div>
                     </div>
 
                     <!-- @include('module::Member.View.pc.inc.registerCaptcha') -->
-                    <div class="line">
+                    <div class="line" id="captcha-line">
                         <div class="field">
                             <div class="row no-gutters">
                                 <div class="col-10">
                                     <input type="text" class="form-lg" name="captcha" autocomplete="off"
                                         onfocus="$(this).attr('data-form-process','processing')"
-                                        onblur="__memberCheckCaptcha()" placeholder="图片验证码" />
+                                        placeholder="图片验证码" />
                                 </div>
                                 <div class="col-2">
                                     <img class="captcha captcha-lg" data-captcha title="刷新验证"
@@ -519,7 +520,7 @@
                                 <div class="field-content">
                                     <select class="form-lg" name="companyType" required>
                                         <option value="">请选择企业类型</option>
-                                        <option value="sports_store">运动器材及用品店</option>
+                                        <option value="sports_store" selected>运动器材及用品店</option>
                                         <option value="manufacturer">生产商</option>
                                         <option value="branch">分公司</option>
                                         <option value="office">代表处</option>
@@ -533,7 +534,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>用户名</label>
                                 <div class="field-content">
-                                    <input type="text" class="form-lg" name="username" required />
+                                    <input type="text" class="form-lg" name="username" required value="test_enterprise_user" />
                                     <div class="field-help">不支持汉字，不能以数字开头；建议使用公司名的字母缩写</div>
                                 </div>
                             </div>
@@ -543,7 +544,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>登录密码</label>
                                 <div class="field-content">
-                                    <input type="password" class="form-lg" name="password" required />
+                                    <input type="password" class="form-lg" name="password" required value="password123" />
                                     <div class="field-help">密码由6-20个英文字母（区分大小写）或数字组成</div>
                                 </div>
                             </div>
@@ -553,7 +554,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>确认密码</label>
                                 <div class="field-content">
-                                    <input type="password" class="form-lg" name="passwordRepeat" required />
+                                    <input type="password" class="form-lg" name="passwordRepeat" required value="password123" />
                                 </div>
                             </div>
                         </div>
@@ -567,7 +568,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>企业名称</label>
                                 <div class="field-content">
-                                    <input type="text" class="form-lg" name="companyName" required />
+                                    <input type="text" class="form-lg" name="companyName" required value="测试企业名称" />
                                 </div>
                             </div>
                         </div>
@@ -576,7 +577,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>所在地区</label>
                                 <div class="field-content">
-                                    <input type="text" class="form-lg" name="location" required />
+                                    <input type="text" class="form-lg" name="location" required value="测试企业地区" />
                                 </div>
                             </div>
                         </div>
@@ -587,7 +588,7 @@
                                 <div class="field-content">
                                     <select class="form-lg" name="companySize" required>
                                         <option value="">请选择企业规模</option>
-                                        <option value="1-10">1-10人</option>
+                                        <option value="1-10" selected>1-10人</option>
                                         <option value="11-50">11-50人</option>
                                         <option value="51-200">51-200人</option>
                                         <option value="201-500">201-500人</option>
@@ -604,7 +605,7 @@
                                 <div class="field-content">
                                     <select class="form-lg" name="revenue" required>
                                         <option value="">请选择年营业额</option>
-                                        <option value="0-100">100万以下</option>
+                                        <option value="0-100" selected>100万以下</option>
                                         <option value="100-500">100-500万</option>
                                         <option value="500-1000">500-1000万</option>
                                         <option value="1000-5000">1000-5000万</option>
@@ -618,7 +619,7 @@
                             <div class="field">
                                 <label>企业简介</label>
                                 <div class="field-content">
-                                    <textarea class="form-lg" name="companyDescription" rows="4"></textarea>
+                                    <textarea class="form-lg" name="companyDescription" rows="4">测试企业简介</textarea>
                                 </div>
                             </div>
                         </div>
@@ -631,7 +632,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>联系人</label>
                                 <div class="field-content">
-                                    <input type="text" class="form-lg" name="contactName" required />
+                                    <input type="text" class="form-lg" name="contactName" required value="测试联系人企业" />
                                 </div>
                             </div>
                         </div>
@@ -640,7 +641,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>职位</label>
                                 <div class="field-content">
-                                    <input type="text" class="form-lg" name="contactPosition" required />
+                                    <input type="text" class="form-lg" name="contactPosition" required value="测试职位" />
                                 </div>
                             </div>
                         </div>
@@ -649,7 +650,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>电话</label>
                                 <div class="field-content">
-                                    <input type="tel" class="form-lg" name="telephone" required />
+                                    <input type="tel" class="form-lg" name="telephone" required value="010-12345678" />
                                 </div>
                             </div>
                         </div>
@@ -658,7 +659,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>手机</label>
                                 <div class="field-content">
-                                    <input type="tel" class="form-lg" name="phone" required />
+                                    <input type="tel" class="form-lg" name="phone" required value="13900139000" />
                                 </div>
                             </div>
                         </div>
@@ -667,7 +668,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>邮编</label>
                                 <div class="field-content">
-                                    <input type="text" class="form-lg" name="zipCode" required />
+                                    <input type="text" class="form-lg" name="zipCode" required value="100000" />
                                 </div>
                             </div>
                         </div>
@@ -676,7 +677,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>通讯地址</label>
                                 <div class="field-content">
-                                    <input type="text" class="form-lg" name="address" required />
+                                    <input type="text" class="form-lg" name="address" required value="测试通讯地址" />
                                 </div>
                             </div>
                         </div>
@@ -685,7 +686,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>常用邮箱</label>
                                 <div class="field-content">
-                                    <input type="email" class="form-lg" name="email" required />
+                                    <input type="email" class="form-lg" name="email" required value="enterprise@example.com" />
                                 </div>
                             </div>
                         </div>
@@ -694,7 +695,7 @@
                             <div class="field">
                                 <label><span class="required">*</span>公司网址</label>
                                 <div class="field-content">
-                                    <input type="url" class="form-lg" name="website" required />
+                                    <input type="url" class="form-lg" name="website" required value="https://www.example.com" />
                                 </div>
                             </div>
                         </div>
@@ -705,7 +706,7 @@
                                 <div class="field-content" style="display: flex; align-items: center;">
                                     <input type="text" class="form-lg" name="captcha" autocomplete="off"
                                         onfocus="$(this).attr('data-form-process','processing')"
-                                        onblur="__memberCheckCaptcha()" placeholder="图片验证码" style="flex-grow: 1; margin-right: 10px;" />
+                                        placeholder="图片验证码" style="flex-grow: 1; margin-right: 10px;" />
                                     <img class="captcha captcha-lg" data-captcha title="刷新验证"
                                         onclick="this.src='{{$__msRoot}}register/captcha?'+Math.random()"
                                         src="{{$__msRoot}}register/captcha?{{time()}}" style="height: 40px; width: auto;" />

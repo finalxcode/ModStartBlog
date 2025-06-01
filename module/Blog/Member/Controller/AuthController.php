@@ -11,6 +11,7 @@ use Module\Blog\Member\Model\Member;
 use Module\Member\Util\MemberMetaUtil;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str; // 引入 Str Facade 用于生成文件名
+use ModStart\Core\Input\Response; // Added ModStart Response
 
 class AuthController extends Controller
 {
@@ -43,7 +44,7 @@ class AuthController extends Controller
 
         MemberUser::login($member);
 
-        return redirect()->intended('/');
+        return \ModStart\Core\Input\Response::generateSuccess(null, '/');
     }
 
     public function showRegisterForm()
@@ -58,24 +59,28 @@ class AuthController extends Controller
     {
         $registerType = $request->input('registerType', 'personal');
 
+        $rules = [];
+        $messages = [];
+
         if ($registerType === 'personal') {
             // 个人注册验证规则
-            $validator = Validator::make($request->all(), [
+            $rules = [
                 'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone',
                 'verify_code' => 'required|string',
                 'password' => 'required|string|min:6',
                 'sports' => 'nullable|array',
-            ], [
+            ];
+            $messages = [
                 'phone.required' => '请输入手机号',
                 'phone.regex' => '请输入正确的手机号格式',
                 'phone.unique' => '该手机号已被注册',
                 'verify_code.required' => '请输入验证码',
                 'password.required' => '请输入密码',
                 'password.min' => '密码长度至少为6位',
-            ]);
+            ];
         } elseif ($registerType === 'expert') {
             // 专家注册验证规则
-            $validator = Validator::make($request->all(), [
+            $rules = [
                 'realname' => 'required|string',
                 'expert_email' => 'required|string|email',
                 'area' => 'required|string',
@@ -86,16 +91,8 @@ class AuthController extends Controller
                 'password' => 'required|string|min:6',
                 'passwordRepeat' => 'required|string|same:password',
                 'captcha' => 'required|string', // Assuming captcha is always required for expert
-                // Add phone/email verification if enabled in config
-                @if(modstart_config('registerPhoneEnable'))
-                    'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone',
-                    'phoneVerify' => 'required|string',
-                @endif
-                @if(modstart_config('registerEmailEnable'))
-                    'email' => 'required|string|email|unique:member,email',
-                    'emailVerify' => 'required|string',
-                @endif
-            ], [
+            ];
+            $messages = [
                 'realname.required' => '请输入姓名',
                 'expert_email.required' => '请输入常用邮箱',
                 'expert_email.email' => '请输入正确的邮箱格式',
@@ -114,23 +111,31 @@ class AuthController extends Controller
                 'passwordRepeat.required' => '请重复输入密码',
                 'passwordRepeat.same' => '两次输入的密码不一致',
                 'captcha.required' => '请输入图片验证码',
-                @if(modstart_config('registerPhoneEnable'))
-                    'phone.required' => '请输入手机号',
-                    'phone.regex' => '请输入正确的手机号格式',
-                    'phone.unique' => '该手机号已被注册',
-                    'phoneVerify.required' => '请输入手机验证码',
-                @endif
-                @if(modstart_config('registerEmailEnable'))
-                    'email.required' => '请输入邮箱',
-                    'email.email' => '请输入正确的邮箱格式',
-                    'email.unique' => '该邮箱已被注册',
-                    'emailVerify.required' => '请输入邮箱验证码',
-                @endif
-            ]);
+            ];
+
+            // Add phone/email verification if enabled in config
+            if (modstart_config('registerPhoneEnable')) {
+                $rules['phone'] = 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone';
+                $rules['phoneVerify'] = 'required|string';
+                $messages['phone.required'] = '请输入手机号';
+                $messages['phone.regex'] = '请输入正确的手机号格式';
+                $messages['phone.unique'] = '该手机号已被注册';
+                $messages['phoneVerify.required'] = '请输入手机验证码';
+            }
+            if (modstart_config('registerEmailEnable')) {
+                $rules['email'] = 'required|string|email|unique:member,email';
+                $rules['emailVerify'] = 'required|string';
+                $messages['email.required'] = '请输入邮箱';
+                $messages['email.email'] = '请输入正确的邮箱格式';
+                $messages['email.unique'] = '该邮箱已被注册';
+                $messages['emailVerify.required'] = '请输入邮箱验证码';
+            }
         } else {
             // 未知注册类型
              return back()->withErrors(['registerType' => '未知的注册类型'])->withInput();
         }
+
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
@@ -205,7 +210,7 @@ class AuthController extends Controller
         // 注册成功事件
         // EventUtil::dispatch(new MemberUserRegisteredEvent($member->id));
 
-        return redirect('/');
+        return \ModStart\Core\Input\Response::generateSuccess(null, '/');
     }
 
     public function logout()

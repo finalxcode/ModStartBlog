@@ -151,7 +151,7 @@ abstract class Handler
      */
     protected function validate(array $message)
     {
-        $sign = $message['sign'];
+        $sign = ( isset($message['sign'])?$message['sign']: null );
         unset($message['sign']);
         if (Support\generate_sign($message, $this->app->getKey()) !== $sign) {
             throw new InvalidSignException();

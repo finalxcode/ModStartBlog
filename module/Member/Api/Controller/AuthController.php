@@ -1,43 +1,84 @@
 <?php
 
-
 namespace Module\Member\Api\Controller;
 
-use Illuminate\Support\Facades\Log;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use ModStart\Core\Assets\AssetsUtil;
-use ModStart\Core\Exception\BizException;
+use Illuminate\Support\Facades\Storage;
 use ModStart\Core\Input\InputPackage;
-use ModStart\Core\Input\Request;
 use ModStart\Core\Input\Response;
-use ModStart\Core\Util\CurlUtil;
-use ModStart\Core\Util\EventUtil;
 use ModStart\Core\Util\RandomUtil;
-use ModStart\Core\Util\SecureUtil;
+use ModStart\Core\Util\EncodeUtil;
+use ModStart\Core\Util\FormatUtil;
 use ModStart\Core\Util\StrUtil;
-use ModStart\Misc\Captcha\CaptchaFacade;
-use ModStart\Module\ModuleBaseController;
-use Module\Member\Auth\MemberUser;
-use Module\Member\Config\MemberOauth;
-use Module\Member\Events\MemberUserLoginedEvent;
-use Module\Member\Events\MemberUserLogoutEvent;
-use Module\Member\Events\MemberUserPasswordResetedEvent;
-use Module\Member\Events\MemberUserRegisteredEvent;
-use Module\Member\Oauth\AbstractOauth;
-use Module\Member\Provider\RegisterProcessor\AbstractMemberRegisterProcessorProvider;
-use Module\Member\Provider\RegisterProcessor\MemberRegisterProcessorProvider;
-use Module\Member\Type\MemberOauthCallbackMode;
+use ModStart\Core\Util\TimeUtil;
+use ModStart\Core\Util\ArrayUtil;
+use ModStart\Core\Exception\BizException;
+use ModStart\Core\Exception\ResultException;
+use ModStart\Core\Dao\ModelUtil;
+use ModStart\Admin\Auth\AdminPermission;
+use ModStart\Core\Util\AgentUtil;
+use ModStart\Core\Dao\ModelCommaUtil;
+use ModStart\Core\Type\BaseType;
+use ModStart\Core\Type\TypeUtil;
+use ModStart\Core\Util\HttpUtil;
+use ModStart\Core\Input\Request;
 use Module\Member\Util\MemberUtil;
+use Module\Member\Util\MemberSocialiteUtil;
+use Module\Member\Util\MemberVipUtil;
+use Module\Member\Util\MemberGroupUtil;
+use Module\Member\Util\MemberMetaUtil;
 use Module\Member\Util\SecurityUtil;
-use Module\MemberOauth\Core\MemberOauthConstant;
-use Module\MemberOauth\Oauth\WechatMiniProgramOauth;
-use Module\MemberOauth\Oauth\WechatMobileOauth;
-use Module\MemberOauth\Oauth\WechatOauth;
-use Module\Vendor\Job\MailSendJob;
-use Module\Vendor\Job\SmsSendJob;
+use Module\Member\Type\MemberStatus;
+use Module\Member\Type\MemberOauthStatus;
+use Module\Member\Type\MemberMoneyChangeType;
+use Module\Member\Type\MemberCreditChangeType;
+use Module\Member\Type\MemberMessageChangeType;
+use Module\Member\Type\MemberOauthCallbackMode;
+
+use Module\Member\Provider\RegisterProcessor\MemberRegisterProcessorProvider as RegisterProcessorProvider;
+use Module\Member\Provider\RegisterProcessor\AbstractMemberRegisterProcessorProvider;
+
+use Module\Member\Events\MemberUserRegisteredEvent;
+use Module\Member\Events\MemberUserLoginedEvent;
+use Module\Member\Events\MemberUserPasswordChangedEvent;
+use Module\Member\Events\MemberUserPhoneChangedEvent;
+use Module\Member\Events\MemberUserEmailChangedEvent;
+use Module\Member\Events\MemberUserSocialiteBindEvent;
+use Module\Member\Events\MemberUserSocialiteLoginEvent;
+use Module\Member\Events\MemberUserSocialiteUnbindEvent;
+use Module\Member\Events\MemberUserUnregisteredEvent;
+use Module\Member\Admin\Controller\BaseMemberController;
+use Module\Member\Util\MemberMessageUtil;
+use Module\Member\Events\MemberUserMoneyChangedEvent;
+use Module\Member\Events\MemberUserCreditChangedEvent;
+use Module\Member\Util\MemberMoneyUtil;
+use Module\Member\Util\MemberCreditUtil;
+use Module\Member\Util\MemberPointUtil;
+use ModStart\Misc\Captcha\CaptchaFacade;
 use Module\Vendor\Support\ResponseCodes;
 use Module\Vendor\Util\SessionUtil;
+use ModStart\Core\Util\CurlUtil;
+use ModStart\Core\Util\EventUtil;
+use Module\Member\Auth\MemberUser;
+
+use Module\MemberOauth\Core\MemberOauthConstant;
+use Module\MemberOauth\Oauth\AbstractOauth;
+use Module\MemberOauth\Oauth\WechatMobileOauth;
+use Module\MemberOauth\Oauth\WechatMiniProgramOauth;
+use Module\MemberOauth\Oauth\WechatOauth;
+use Module\Member\Config\MemberOauth;
+
+use ModStart\Core\Assets\AssetsUtil;
+
+use Module\Member\Events\MemberUserLogoutEvent;
+use Module\Member\Events\MemberUserPasswordResetedEvent;
+
+use Module\Vendor\Job\SmsSendJob;
+use Module\Vendor\Jobs\MailSendJob;
 
 /**
  * ############### 系列产品 SSO Client 登录流程 ###############
@@ -118,7 +159,7 @@ use Module\Vendor\Util\SessionUtil;
  * @package Module\Member\Api\Controller
  * @Api 用户授权
  */
-class AuthController extends ModuleBaseController
+class AuthController extends BaseController
 {
     public function checkRedirectSafety($redirect)
     {
@@ -823,7 +864,7 @@ class AuthController extends ModuleBaseController
         $memberUser = MemberUtil::getByPhone($phone);
         // 自动注册
         if (empty($memberUser) && modstart_config('Member_LoginPhoneAutoRegister', false)) {
-            foreach (MemberRegisterProcessorProvider::listAll() as $provider) {
+            foreach (RegisterProcessorProvider::listAll() as $provider) {
                 /** @var AbstractMemberRegisterProcessorProvider $provider */
                 $ret = $provider->preCheck();
                 if (Response::isError($ret)) {
@@ -844,7 +885,7 @@ class AuthController extends ModuleBaseController
             }
             EventUtil::fire(new MemberUserRegisteredEvent($memberUserId));
             Session::forget('registerCaptchaPass');
-            foreach (MemberRegisterProcessorProvider::listAll() as $provider) {
+            foreach (RegisterProcessorProvider::listAll() as $provider) {
                 /** @var AbstractMemberRegisterProcessorProvider $provider */
                 $provider->postProcess($memberUserId);
             }
@@ -988,7 +1029,7 @@ class AuthController extends ModuleBaseController
             return Response::generate(-1, '两次手机不一致');
         }
 
-        foreach (MemberRegisterProcessorProvider::listAll() as $provider) {
+        foreach (RegisterProcessorProvider::listAll() as $provider) {
             /** @var AbstractMemberRegisterProcessorProvider $provider */
             $ret = $provider->preCheck();
             if (Response::isError($ret)) {
@@ -1010,7 +1051,7 @@ class AuthController extends ModuleBaseController
         }
         EventUtil::fire(new MemberUserRegisteredEvent($memberUserId));
         Session::forget('registerCaptchaPass');
-        foreach (MemberRegisterProcessorProvider::listAll() as $provider) {
+        foreach (RegisterProcessorProvider::listAll() as $provider) {
             /** @var AbstractMemberRegisterProcessorProvider $provider */
             $provider->postProcess($memberUserId);
         }
@@ -1056,6 +1097,7 @@ class AuthController extends ModuleBaseController
         $password = $input->getTrimString('password');
         $passwordRepeat = $input->getTrimString('passwordRepeat');
         $captcha = $input->getTrimString('captcha');
+        $registerType = $input->getTrimString('registerType', 'personal');
 
         if (empty($username)) {
             return Response::generate(-1, '用户名不能为空');
@@ -1118,7 +1160,7 @@ class AuthController extends ModuleBaseController
         }
         BizException::throwsIfResponseError(MemberUtil::passwordStrengthCheck($password));
 
-        foreach (MemberRegisterProcessorProvider::listAll() as $provider) {
+        foreach (RegisterProcessorProvider::listAll() as $provider) {
             /** @var AbstractMemberRegisterProcessorProvider $provider */
             $ret = $provider->preCheck();
             if (Response::isError($ret)) {
@@ -1126,7 +1168,24 @@ class AuthController extends ModuleBaseController
             }
         }
 
-        $ret = MemberUtil::register($username, $phone, $email, $password);
+        // Handle certificate upload for expert registration
+        $param = [];
+        if ($registerType === 'expert') {
+            $uploadedFiles = $input->file('certs');
+            $certificatePaths = [];
+            if (!empty($uploadedFiles)) {
+                foreach ($uploadedFiles as $file) {
+                    if ($file->isValid()) {
+                        // Store the file and get its path
+                        $path = $file->store('certificates', 'public'); // Assuming 'public' disk and 'certificates' directory
+                        $certificatePaths[] = Storage::url($path); // Get the public URL
+                    }
+                }
+            }
+            $param['certificates'] = json_encode($certificatePaths); // Store paths as JSON
+        }
+
+        $ret = MemberUtil::register($username, $phone, $email, $password, false, $param);
         if ($ret['code']) {
             return Response::generate(-1, $ret['msg']);
         }
@@ -1144,7 +1203,7 @@ class AuthController extends ModuleBaseController
         }
         EventUtil::fire(new MemberUserRegisteredEvent($memberUserId));
         Session::forget('registerCaptchaPass');
-        foreach (MemberRegisterProcessorProvider::listAll() as $provider) {
+        foreach (RegisterProcessorProvider::listAll() as $provider) {
             /** @var AbstractMemberRegisterProcessorProvider $provider */
             $provider->postProcess($memberUserId);
         }
