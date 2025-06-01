@@ -331,8 +331,9 @@
                     </div>
                 </form>
 
-                <!-- 大神入驻表单 -->
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">
+                <!-- 大神入驻表单 
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">-->
+                <form action="{{$__msRoot}}blog/member/register" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">
                     <input type="hidden" name="registerType" value="expert">
                     
                     <div class="expert-welcome">
