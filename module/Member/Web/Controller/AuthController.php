@@ -193,16 +193,16 @@ class AuthController extends ModuleBaseController
         return Response::redirect($redirect);
     }
 
-    public function register()
+    public function register(\Illuminate\Http\Request $request)
     {
         BizException::throwsIf('禁止注册', modstart_config('registerDisable', false));
         $input = InputPackage::buildFromInput();
         $redirectData = $this->getRedirectData($input);
         if (Request::isPost()) {
-            $ret = $this->api->register();
+            $ret = $this->api->register($request);
             if ($ret['code']) {
                 if ($input->getTrimString('captcha')) {
-                    return Response::send(-1, $ret['msg'], null, '[js]$("[data-captcha]").click()');
+                    return Response::send(-1, $ret['msg'], null, '/register');
                 }
                 return Response::send(-1, $ret['msg']);
             }

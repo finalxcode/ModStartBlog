@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use ModStart\Core\Input\InputPackage;
@@ -26,6 +27,7 @@ use ModStart\Core\Type\BaseType;
 use ModStart\Core\Type\TypeUtil;
 use ModStart\Core\Util\HttpUtil;
 use ModStart\Core\Input\Request;
+use Module\Blog\Member\Model\Member;
 use Module\Member\Util\MemberUtil;
 use Module\Member\Util\MemberSocialiteUtil;
 use Module\Member\Util\MemberVipUtil;
@@ -1075,140 +1077,220 @@ class AuthController extends BaseController
      * @ApiBodyParam captcha string 验证码
      * @ApiBodyParam agreement boolean 是否同意协议
      */
-    public function register()
+    public function register(\Illuminate\Http\Request $form)
     {
-        if (modstart_config('registerDisable', false)) {
-            return Response::generate(-1, '禁止注册');
+        $request = InputPackage::buildFromInput();
+        $registerType = $request->get('registerType', 'personal');
+
+        $rules = [];
+        $messages = [];
+
+        if ($registerType === 'personal') {
+            // 个人注册验证规则
+            $rules = [
+                'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone',
+                'verify_code' => 'required|string',
+                'password' => 'required|string|min:6',
+                'sports' => 'nullable|array',
+            ];
+            $messages = [
+                'phone.required' => '请输入手机号',
+                'phone.regex' => '请输入正确的手机号格式',
+                'phone.unique' => '该手机号已被注册',
+                'verify_code.required' => '请输入验证码',
+                'password.required' => '请输入密码',
+                'password.min' => '密码长度至少为6位',
+            ];
+        } elseif ($registerType === 'expert') {
+            // 专家注册验证规则
+            $rules = [
+                'real_name' => 'required|string',
+                'email' => 'required|string|email',
+                'area' => 'required|string',
+                'contact_name' => 'required|string',
+                'sports' => 'required|array',
+                'expert_libraries' => 'required|array',
+//                'certs.*' => 'required|file|mimes:jpg,png,pdf|max:10240', // 证书文件验证 (每个文件)
+                'password' => 'required|string|min:6',
+                'password_repeat' => 'required|string|same:password',
+                'captcha' => 'required|string', // Assuming captcha is always required for expert
+            ];
+            $messages = [
+                'real_name.required' => '请输入姓名',
+                'email.required' => '请输入常用邮箱',
+                'email.email' => '请输入正确的邮箱格式',
+                'area.required' => '请输入所在地区',
+                'contact_name.required' => '请输入联系信息',
+                'sports.required' => '请选择喜欢的运动',
+                'sports.array' => '运动信息格式不正确',
+                'expert_libraries.required' => '请选择要录入的大神库',
+                'expert_libraries.array' => '大神库信息格式不正确',
+//                'certs.*.required' => '请上传证书文件',
+//                'certs.*.file' => '证书文件上传失败',
+//                'certs.*.mimes' => '证书文件只支持jpg,png,pdf格式',
+//                'certs.*.max' => '证书文件大小不能超过10MB',
+                'password.required' => '请输入密码',
+                'password.min' => '密码长度至少为6位',
+                'password_repeat.required' => '请重复输入密码',
+                'password_repeat.same' => '两次输入的密码不一致',
+                'captcha.required' => '请输入图片验证码',
+            ];
+
+            // Add phone/email verification if enabled in config
+            if (modstart_config('registerPhoneEnable')) {
+                $rules['phone'] = 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone';
+                $rules['phoneVerify'] = 'required|string';
+                $messages['phone.required'] = '请输入手机号';
+                $messages['phone.regex'] = '请输入正确的手机号格式';
+                $messages['phone.unique'] = '该手机号已被注册';
+                $messages['phoneVerify.required'] = '请输入手机验证码';
+            }
+            if (modstart_config('registerEmailEnable')) {
+                $rules['email'] = 'required|string|email|unique:member,email';
+                $rules['emailVerify'] = 'required|string';
+                $messages['email.required'] = '请输入邮箱';
+                $messages['email.email'] = '请输入正确的邮箱格式';
+                $messages['email.unique'] = '该邮箱已被注册';
+                $messages['emailVerify.required'] = '请输入邮箱验证码';
+            }
+
+            $certFiles = $form->file('certs');
+            if (empty($certFiles)) {
+                return Response::generate(1, '请上传证书');
+            }
+            if ($certFiles->getSize() > 10240) {
+                return Response::generate(1, '单个证书文件上传最大10M');
+            } else if (!in_array($certFiles->getExtension(), ['png', 'jpg', 'jpeg', 'pdf'])) {
+                return Response::generate(1, '单个证书文件必须是png、jpg或者pdf');
+            }
+            return Response::generate(1, '请上传证书');
+        } elseif ($registerType === 'enterprise') {
+            // 企业注册验证规则
+            $rules = [
+                'username' => 'required|string|unique:member_user,username',
+                'password' => 'required|string|min:6',
+                'passwordRepeat' => 'required|string|same:password',
+                'companyType' => 'required|string',
+                'companyName' => 'required|string',
+                'location' => 'required|string',
+                'companySize' => 'required|string',
+                'revenue' => 'required|string',
+                'companyDescription' => 'required|string',
+                'contactName' => 'required|string',
+                'contactPosition' => 'required|string',
+                'telephone' => 'required|string',
+                'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member_user,phone',
+                'zipCode' => 'required|string',
+                'address' => 'required|string',
+                'email' => 'required|string|email|unique:member_user,email',
+                'website' => 'required|string|url|max:255'
+            ];
+            $messages = [
+                'username.required' => '请输入用户名',
+                'username.unique' => '该用户名已被注册',
+                'password.required' => '请输入密码',
+                'password.min' => '密码长度至少为6位',
+                'passwordRepeat.required' => '请重复输入密码',
+                'passwordRepeat.same' => '两次输入的密码不一致',
+                'companyType.required' => '请选择企业类型',
+                'companyName.required' => '请输入企业名称',
+                'location.required' => '请输入企业地区',
+                'companySize.required' => '请选择企业规模',
+                'revenue.required' => '请选择营收规模',
+                'companyDescription.required' => '请输入企业简介',
+                'contactName.required' => '请输入联系人姓名',
+                'contactPosition.required' => '请输入联系人职位',
+                'telephone.required' => '请输入固定电话',
+                'phone.required' => '请输入手机号',
+                'phone.regex' => '请输入正确的手机号格式',
+                'phone.unique' => '该手机号已被注册',
+                'zipCode.required' => '请输入邮政编码',
+                'address.required' => '请输入通讯地址',
+                'email.required' => '请输入邮箱',
+                'email.email' => '请输入正确的邮箱格式',
+                'email.unique' => '该邮箱已被注册',
+                'website.url' => '请输入正确的网站地址',
+                'website.nullable' => '网站地址可以为空'
+            ];
+        } else {
+            // 未知注册类型
+            return back()->withErrors(['registerType' => '未知的注册类型'])->withInput();
         }
 
-        $input = InputPackage::buildFromInput();
-
-        if (modstart_config('Member_AgreementEnable', false)) {
-            if (!$input->getBoolean('agreement')) {
-                return Response::generateError('请先同意 ' . modstart_config('Member_AgreementTitle', '用户使用协议'));
-            }
+        $validator = Validator::make($request->all(), $rules, $messages);
+        dd($validator->fails(), $validator->errors());
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
         }
 
-        $username = $input->getTrimString('username');
-        $phone = $input->getPhone('phone');
-        $phoneVerify = $input->getTrimString('phoneVerify');
-        $email = $input->getEmail('email');
-        $emailVerify = $input->getTrimString('emailVerify');
-        $password = $input->getTrimString('password');
-        $passwordRepeat = $input->getTrimString('passwordRepeat');
-        $captcha = $input->getTrimString('captcha');
-        $registerType = $input->getTrimString('registerType', 'personal');
+        // 创建用户
+        $member = \Module\Member\Model\MemberUser::create([
+            'username' => $request->get('username', $request->get('contactName')),
+            'phone' => $request->get('phone'),
+            'email' => $request->get('email'),
+            'password' => $request->get('password'),
+            'status' => 1, // 默认状态
+            'realname' => $request->get('realName', $request->get('contactName')),
+            'area' => $request->get('area', $request->get('location')),
+            'expert_status' => ($registerType === 'expert') ? 1 : 0,
+            'company_type' => $request->get('companyType'),
+            'company_name' => $request->get('companyName'),
+            'company_size' => $request->get('companySize'),
+            'company_revenue' => $request->get('revenue'),
+            'company_description' => $request->get('companyDescription'),
+            'contact_position' => $request->get('contactPosition'),
+            'telephone' => $request->get('telephone'),
+            'zip_code' => $request->get('zipCode'),
+            'address' => $request->get('address'),
+            'website' => $request->get('website')
+        ]);
 
-        if (empty($username)) {
-            return Response::generate(-1, '用户名不能为空');
-        }
-        /** 为了兼容统一登录，禁止使用手机号格式和邮箱格式  */
-        if (Str::contains($username, '@')) {
-            return Response::generate(-1, '用户名不能包含特殊字符');
-        }
-        if (preg_match('/^\\d{11}$/', $username)) {
-            return Response::generate(-1, '用户名不能为纯数字');
-        }
-
-        if (!Session::get('registerCaptchaPass', false)) {
-            if (!CaptchaFacade::check($captcha)) {
-                SessionUtil::atomicProduce('registerCaptchaPassCount', 1);
-                return Response::generate(-1, '请重新进行安全验证');
-            }
-        }
-        if (!SessionUtil::atomicConsume('registerCaptchaPassCount')) {
-            return Response::generate(-1, '请进行安全验证');
-        }
-
-        if (modstart_config('registerPhoneEnable')) {
-            if (empty($phone)) {
-                return Response::generate(-1, '请输入手机');
-            }
-            $phoneVerifyCheck = Session::get('registerPhoneVerify');
-            if ($phoneVerify != $phoneVerifyCheck) {
-                Log::info('Member.Register.PhoneVerifyError - ' . $phoneVerify . ' - ' . $phoneVerifyCheck);
-                return Response::generate(-1, '手机验证码不正确.');
-            }
-            if (Session::get('registerPhoneVerifyTime') + 60 * 60 < time()) {
-                return Response::generate(-1, '手机验证码已过期');
-            }
-            if ($phone != Session::get('registerPhone')) {
-                return Response::generate(-1, '两次手机不一致');
-            }
-        }
-        if (modstart_config('registerEmailEnable')) {
-            if (empty($email)) {
-                return Response::generate(-1, '请输入邮箱');
-            }
-            $emailVerifyCheck = Session::get('registerEmailVerify');
-            if ($emailVerify != $emailVerifyCheck) {
-                Log::info('Member.Register.EmailVerifyError - ' . $emailVerify . ' - ' . $emailVerifyCheck);
-                return Response::generate(-1, '邮箱验证码不正确.');
-            }
-            if (Session::get('registerEmailVerifyTime') + 60 * 60 < time()) {
-                return Response::generate(-1, '邮箱验证码已过期');
-            }
-            if ($email != Session::get('registerEmail')) {
-                return Response::generate(-1, '两次邮箱不一致');
-            }
-        }
-        if (empty($password)) {
-            return Response::generate(-1, '请输入密码');
-        }
-        if ($password != $passwordRepeat) {
-            return Response::generate(-1, '两次输入密码不一致');
-        }
-        BizException::throwsIfResponseError(MemberUtil::passwordStrengthCheck($password));
-
-        foreach (RegisterProcessorProvider::listAll() as $provider) {
-            /** @var AbstractMemberRegisterProcessorProvider $provider */
-            $ret = $provider->preCheck();
-            if (Response::isError($ret)) {
-                return $ret;
-            }
-        }
-
-        // Handle certificate upload for expert registration
-        $param = [];
+        // 处理专家注册特有信息
         if ($registerType === 'expert') {
-            $uploadedFiles = $input->file('certs');
-            $certificatePaths = [];
-            if (!empty($uploadedFiles)) {
-                foreach ($uploadedFiles as $file) {
-                    if ($file->isValid()) {
-                        // Store the file and get its path
-                        $path = $file->store('certificates', 'public'); // Assuming 'public' disk and 'certificates' directory
-                        $certificatePaths[] = Storage::url($path); // Get the public URL
+            // 保存喜欢的运动到 member_meta
+            $sports = $request->get('sports');
+            if (!empty($sports) && is_array($sports)) {
+                MemberMetaUtil::set($member->id, 'favorite_sports', json_encode($sports));
+            }
+
+            // 保存选择的大神库到 member_meta
+            $expertLibraries = $request->get('expert_libraries');
+            if (!empty($expertLibraries) && is_array($expertLibraries)) {
+                MemberMetaUtil::set($member->id, 'expert_libraries', json_encode($expertLibraries));
+            }
+
+            // 处理证书文件上传并保存信息到 member_meta
+            $certFiles = $form->file('certs');
+            if (!empty($certFiles)) {
+                foreach ($certFiles as $certFile) {
+                    if ($certFile->isValid()) {
+                        $originalName = $certFile->getClientOriginalName();
+                        $extension = $certFile->getClientOriginalExtension();
+                        // 生成唯一的存储文件名，保留原扩展名
+                        $fileName = 'cert_' . $member->id . '_' . Str::random(10) . '.' . $extension;
+                        $path = 'cert/' . $fileName;
+                        \Illuminate\Support\Facades\Storage::put($path, file_get_contents($certFile->getRealPath()));
+
+                        $publicPath = '/storage/' . ltrim($path, '/');
+                        $uploadedCertsInfo[] = [
+                            'path' => $publicPath, // 获取可公开访问的URL
+                            'original_name' => $originalName,
+                            'extension' => $extension,
+                            'size' => $certFile->getSize(),
+                        ];
                     }
                 }
             }
-            $param['certificates'] = json_encode($certificatePaths); // Store paths as JSON
+            if (!empty($uploadedCertsInfo)) {
+                MemberMetaUtil::set($member->id, 'certs', json_encode($uploadedCertsInfo));
+            }
         }
 
-        $ret = MemberUtil::register($username, $phone, $email, $password, false, $param);
-        if ($ret['code']) {
-            return Response::generate(-1, $ret['msg']);
-        }
-        $memberUserId = $ret['data']['id'];
-        $update = [];
-        if (modstart_config('registerPhoneEnable')) {
-            $update['phoneVerified'] = true;
-        }
-        if (modstart_config('registerEmailEnable')) {
-            $update['emailVerified'] = true;
-        }
-        $update['registerIp'] = StrUtil::mbLimit(Request::ip(), 20);
-        if (!empty($update)) {
-            MemberUtil::update($memberUserId, $update);
-        }
-        EventUtil::fire(new MemberUserRegisteredEvent($memberUserId));
-        Session::forget('registerCaptchaPass');
-        foreach (RegisterProcessorProvider::listAll() as $provider) {
-            /** @var AbstractMemberRegisterProcessorProvider $provider */
-            $provider->postProcess($memberUserId);
-        }
+        // 登录用户
+        \Module\Blog\Member\Auth\MemberUser::login($member);
+
         return Response::generate(0, '注册成功', [
-            'id' => $memberUserId,
+            'id' => $member->id,
         ]);
     }
 

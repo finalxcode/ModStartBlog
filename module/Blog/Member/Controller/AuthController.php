@@ -149,7 +149,6 @@ class AuthController extends Controller
         // if ($registerType === 'expert' && modstart_config('registerEmailEnable')) { ... 验证邮箱验证码 ... }
         // if ($registerType === 'expert') { ... 验证图片验证码 ... }
 
-        dd(111);
         // 创建用户
         $member = Member::create([
             'username' => $request->input('username', $request->input('phone', $request->input('expert_email')) ? substr($request->input('phone', $request->input('expert_email')), -4) : null),

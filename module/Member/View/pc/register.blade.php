@@ -331,9 +331,9 @@
                     </div>
                 </form>
 
-                <!-- 大神入驻表单 
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">-->
-                <form action="{{$__msRoot}}blog/member/register" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">
+                <!-- 大神入驻表单 -->
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">
+                <!-- <form action="{{$__msRoot}}blog/member/register" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data"> -->
                     <input type="hidden" name="registerType" value="expert">
                     
                     <div class="expert-welcome">
@@ -383,19 +383,19 @@
                             <div class="expert-database">
                                 <div class="expert-database-title">选择您要录入的大神库</div>
                                 <div class="expert-database-list">
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="marathon_sub3" checked><span>中国马拉松破三跑者库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="ultra_100k"><span>中国百公里越野赛跑者库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="cycling_level3"><span>达到国家三级运动员水平骑者库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="roller_level3"><span>达到国家三级运动员标准轮滑大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="downhill_level3"><span>达到国家三级运动员标准速降大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="mountaineering_level3"><span>达到国家三级运动员标准登山大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="rock_climbing_level3"><span>达到国家三级运动员标准攀岩大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="swimming_level3"><span>达到国家三级运动员标准游泳大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="kayaking_level3"><span>达到国家三级运动员标准皮划艇大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="diving_level3"><span>达到国家三级运动员标准潜水大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="ice_climbing_level3"><span>达到国家三级运动员标准攀冰大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="skiing_level3"><span>达到国家三级运动员标准滑雪大神库</span></label>
-                                    <label class="database-item"><input type="checkbox" name="expert_database[]" value="ice_skating_level3"><span>达到国家三级运动员标准滑冰大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="marathon_sub3" checked><span>中国马拉松破三跑者库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="ultra_100k"><span>中国百公里越野赛跑者库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="cycling_level3"><span>达到国家三级运动员水平骑者库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="roller_level3"><span>达到国家三级运动员标准轮滑大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="downhill_level3"><span>达到国家三级运动员标准速降大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="mountaineering_level3"><span>达到国家三级运动员标准登山大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="rock_climbing_level3"><span>达到国家三级运动员标准攀岩大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="swimming_level3"><span>达到国家三级运动员标准游泳大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="kayaking_level3"><span>达到国家三级运动员标准皮划艇大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="diving_level3"><span>达到国家三级运动员标准潜水大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="ice_climbing_level3"><span>达到国家三级运动员标准攀冰大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="skiing_level3"><span>达到国家三级运动员标准滑雪大神库</span></label>
+                                    <label class="database-item"><input type="checkbox" name="expert_libraries[]" value="ice_skating_level3"><span>达到国家三级运动员标准滑冰大神库</span></label>
                                 </div>
                             </div>
                         </div>
@@ -415,7 +415,7 @@
 
                     <div class="line">
                         <div class="field">
-                            <input type="text" class="form-lg" name="realName" placeholder="姓名（必填）" required value="测试大神" />
+                            <input type="text" class="form-lg" name="real_name" placeholder="姓名（必填）" required value="测试大神" />
                         </div>
                     </div>
 
@@ -427,13 +427,13 @@
 
                     <div class="line">
                         <div class="field">
-                            <input type="text" class="form-lg" name="location" placeholder="所在地区（必填）" required value="测试地区" />
+                            <input type="text" class="form-lg" name="area" placeholder="所在地区（必填）" required value="测试地区" />
                         </div>
                     </div>
 
                     <div class="line">
                         <div class="field">
-                            <input type="text" class="form-lg" name="contactName" placeholder="联系信息（姓名须与证书一致）" required value="测试联系人" />
+                            <input type="text" class="form-lg" name="contact_name" placeholder="联系信息（姓名须与证书一致）" required value="测试联系人" />
                         </div>
                     </div>
 
@@ -451,7 +451,7 @@
 
                     <div class="line">
                         <div class="field">
-                            <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" required value="password123" />
+                            <input type="password" class="form-lg" name="password_repeat" placeholder="重复密码" required value="password123" />
                         </div>
                     </div>
 
