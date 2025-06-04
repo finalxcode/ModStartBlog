@@ -1218,9 +1218,12 @@ class AuthController extends BaseController
         }
 
         $validator = Validator::make($request->all(), $rules, $messages);
-        dd($validator->fails(), $validator->errors());
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+            return response()->json([
+                'code' => -1,
+                'msg' => '表单校验失败',
+                'errors' => $validator->errors(),
+            ]);
         }
 
         // 创建用户

@@ -713,7 +713,7 @@
                                         src="{{$__msRoot}}register/captcha?{{time()}}" style="height: 40px; width: auto;" />
                                 </div>
                                 <div class="help">
-                                    <span class="ub-text-muted" data-captcha-status="tip"><i class="iconfont icon-warning"></i> 输入图片验证码验证</span>
+                                    <!-- <span class="ub-text-muted" data-captcha-status="tip"><i class="iconfont icon-warning"></i> 输入图片验证码验证</span> -->
                                     <span class="ub-text-muted" data-captcha-status="loading" style="display:none;"><i class="iconfont icon-refresh"></i> 正在验证</span>
                                     <span class="ub-text-success" data-captcha-status="success" style="display:none;"><i class="iconfont icon-checked"></i> 验证通过</span>
                                     <span class="ub-text-danger" data-captcha-status="error" style="display:none;"><i class="iconfont icon-close-o"></i> 验证失败</span>
@@ -1141,8 +1141,14 @@
         
         /* 按钮样式优化 */
         .btn-block {
-            margin-left: 120px;
-            width: calc(100% - 120px);
+            width: 200px;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        /* 按钮容器居中 */
+        .register-form .line:has(button[type="submit"]) .field {
+            text-align: center;
         }
         
         /* 验证码区域样式 */

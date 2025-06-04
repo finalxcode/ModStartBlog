@@ -200,6 +200,9 @@ class AuthController extends ModuleBaseController
         $redirectData = $this->getRedirectData($input);
         if (Request::isPost()) {
             $ret = $this->api->register($request);
+            if ($ret instanceof \Illuminate\Http\JsonResponse) {
+                return $ret;
+            }
             if ($ret['code']) {
                 if ($input->getTrimString('captcha')) {
                     return Response::send(-1, $ret['msg'], null, '/register');
