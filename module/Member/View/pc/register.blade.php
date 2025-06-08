@@ -18,12 +18,214 @@
         $(function () {
             var needCaptcha = {!! \Module\Member\Util\SecurityUtil::registerCaptchaProvider() ? false : true !!};
             
+
+            
+            // 显示字段错误信息
+            function showFieldError(fieldName, errorMessage) {
+                var $field = $('input[name="' + fieldName + '"], select[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
+                if ($field.length > 0) {
+                    $field.addClass('error');
+                    var $errorDiv = $('<div class="field-error">' + errorMessage + '</div>');
+                    $field.closest('.field, .field-content').append($errorDiv);
+                }
+            }
+            
+            // 添加调试日志
+            console.log('注册页面JavaScript已加载');
+            console.log('jQuery版本:', $.fn.jquery);
+            console.log('window.__msRoot:', window.__msRoot);
+            console.log('ModStart相关对象:', {
+                ModStart: typeof window.ModStart,
+                api: typeof window.api,
+                Dialog: typeof window.Dialog
+            });
+            
+            // 检查页面加载的脚本
+            console.log('页面加载的脚本文件:');
+            $('script[src]').each(function(index) {
+                console.log('脚本 ' + index + ':', $(this).attr('src'));
+            });
+            
+            // 监听表单提交事件
+            $('form[data-ajax-form]').on('submit', function(e) {
+                console.log('表单提交事件触发:', e);
+                console.log('表单元素:', this);
+                console.log('表单data-ajax-form属性:', $(this).attr('data-ajax-form'));
+                console.log('表单数据:', $(this).serialize());
+                console.log('事件是否被阻止:', e.isDefaultPrevented());
+                
+                // 阻止默认的表单提交和任何其他处理器
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                console.log('已阻止默认表单提交');
+                
+                // 强制移除所有可能的loading状态
+                var $submitBtn = $(this).find('button[type="submit"]');
+                $submitBtn.prop('disabled', false).text('提交注册');
+                
+                // 查找并移除所有loading相关的元素和类
+                $('.loading, .ub-loading, .layui-loading, [data-loading]').remove();
+                $('body, html, .ub-form, form').removeClass('loading ub-loading layui-loading');
+                $submitBtn.removeClass('loading ub-loading layui-loading disabled');
+                
+                console.log('强制清除loading状态');
+                
+                // 设置定时器持续清除loading状态
+                var clearLoadingInterval = setInterval(function() {
+                    $('.loading, .ub-loading, .layui-loading, [data-loading]').remove();
+                    $('body, html, .ub-form, form').removeClass('loading ub-loading layui-loading');
+                    
+                    // 强制恢复所有提交按钮的状态
+                    $('button[type="submit"]').each(function() {
+                        var $btn = $(this);
+                        if ($btn.prop('disabled') || $btn.text().indexOf('提交中') !== -1 || $btn.text().indexOf('loading') !== -1) {
+                            $btn.prop('disabled', false).text('提交注册');
+                            $btn.removeClass('loading ub-loading layui-loading disabled');
+                            console.log('强制恢复按钮状态:', $btn[0]);
+                        }
+                    });
+                    
+                    // 专门清除Layui的loading遮罩层
+                    var layuiLoadingElements = $('.layui-layer-loading, .layui-layer-loading2, .layui-layer-loading-2, [id^="layui-layer"]');
+                    if (layuiLoadingElements.length > 0) {
+                        console.log('发现Layui loading元素:', layuiLoadingElements.toArray());
+                        layuiLoadingElements.each(function() {
+                            var $el = $(this);
+                            console.log('移除Layui loading元素:', {
+                                element: this,
+                                id: $el.attr('id'),
+                                classes: $el.attr('class')
+                            });
+                            $el.remove();
+                        });
+                    }
+                    
+                    // 清除其他可能的loading元素（但排除页面基本元素）
+                    var otherLoadingElements = $('.loading, .spinner, .ub-loading, [data-loading]').not('html, head, body, script, style');
+                    if (otherLoadingElements.length > 0) {
+                        console.log('发现其他loading元素:', otherLoadingElements.toArray());
+                        otherLoadingElements.remove();
+                    }
+                    
+                    console.log('定时清除loading状态');
+                }, 100);
+                
+                // 5秒后停止定时器
+                setTimeout(function() {
+                    clearInterval(clearLoadingInterval);
+                    console.log('停止定时清除loading');
+                }, 5000);
+                
+                // 尝试手动发送AJAX请求来测试后端
+                var $form = $(this);
+                console.log('准备手动发送AJAX请求...');
+                
+                // 设置loading状态
+                $submitBtn.prop('disabled', true).text('提交中...');
+                
+                $.ajax({
+                    url: $form.attr('action'),
+                    method: $form.attr('method'),
+                    data: $form.serialize(),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    beforeSend: function() {
+                        console.log('手动AJAX请求开始');
+                    },
+                    success: function(response) {
+                        console.log('手动AJAX请求成功:', response);
+                        
+                        // 恢复按钮状态并强制清除loading
+                        $submitBtn.prop('disabled', false).text('提交注册');
+                        
+                        // 强制清除所有loading状态
+                        $('.loading, .ub-loading, .layui-loading, [data-loading]').remove();
+                        $('body, html, .ub-form, form').removeClass('loading ub-loading layui-loading');
+                        $submitBtn.removeClass('loading ub-loading layui-loading disabled');
+                        
+                        console.log('AJAX成功后强制清除loading状态');
+                        
+                        // 清除之前的错误信息
+                        $('.field-error').remove();
+                        $('.form-lg').removeClass('error');
+                        
+                        // 如果有字段级别的错误，显示它们
+                        if (response.code !== 0 && response.errors && typeof response.errors === 'object') {
+                            console.log('显示字段错误:', response.errors);
+                            for (var fieldName in response.errors) {
+                                var errors = response.errors[fieldName];
+                                if (Array.isArray(errors) && errors.length > 0) {
+                                    showFieldError(fieldName, errors[0]);
+                                }
+                            }
+                        } else if (response.code === 0) {
+                            console.log('注册成功!');
+                            $submitBtn.text('注册成功!');
+                            alert('注册成功!');
+                            if (response.redirect) {
+                                window.location.href = response.redirect;
+                            }
+                        } else if (response.msg) {
+                            alert(response.msg);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('手动AJAX请求失败:', {xhr, status, error});
+                        console.log('响应内容:', xhr.responseText);
+                        
+                        // 恢复按钮状态并强制清除loading
+                        $submitBtn.prop('disabled', false).text('提交注册');
+                        
+                        // 强制清除所有loading状态
+                        $('.loading, .ub-loading, .layui-loading, [data-loading]').remove();
+                        $('body, html, .ub-form, form').removeClass('loading ub-loading layui-loading');
+                        $submitBtn.removeClass('loading ub-loading layui-loading disabled');
+                        
+                        console.log('AJAX错误后强制清除loading状态');
+                        alert('提交失败，请重试');
+                    }
+                });
+            });
+            
+
+            
+            // 监听按钮点击事件
+            $('button[type="submit"]').on('click', function(e) {
+                console.log('提交按钮被点击:', e);
+                console.log('按钮元素:', this);
+                console.log('所属表单:', $(this).closest('form')[0]);
+            });
+            
+            // 检查表单状态
+            setTimeout(function() {
+                console.log('页面加载完成后的表单状态:');
+                $('form[data-ajax-form]').each(function(index) {
+                    console.log('表单 ' + index + ':', {
+                        element: this,
+                        action: $(this).attr('action'),
+                        method: $(this).attr('method'),
+                        dataAjaxForm: $(this).attr('data-ajax-form'),
+                        visible: $(this).is(':visible')
+                    });
+                });
+            }, 1000);
+            
+            // 当用户开始输入时清除错误信息
+            $(document).on('input change', '.form-lg.error', function() {
+                $(this).removeClass('error');
+                $(this).closest('.field, .field-content').find('.field-error').remove();
+            });
+            
             // 注册类型切换
             $('.register-type-item').click(function(){
                 $('.register-type-item').removeClass('active');
                 $(this).addClass('active');
                 $('.register-form').hide();
                 $('.register-form[data-type="'+$(this).data('type')+'"]').show();
+                // 切换时清除错误信息
+                $('.field-error').remove();
+                $('.form-lg').removeClass('error');
             });
 
             // 运动标签选择
@@ -128,41 +330,7 @@
                 // 如果需要真正的文件管理，需要更复杂的逻辑，例如使用 DataTransfer 或维护一个文件数组
             });
 
-            // Test submit button handler
-            $('#test-submit-btn').on('click', function() {
-                $('.expert-register-form').submit();
-            });
 
-            // Debugging: Log captcha input changes and form submission
-            $('input[name=captcha]').on('input change', function() {
-                console.log('Captcha input changed:', $(this).val());
-            });
-
-            $('form[data-ajax-form]').on('submit', function(e) {
-                console.log('Form submit event triggered.');
-                // Temporarily remove required from captcha to see if it's the issue
-                $('input[name=captcha]').removeAttr('required');
-
-                // Check if the default submission is prevented
-                if (e.isDefaultPrevented()) {
-                    console.log('Default form submission was prevented.');
-                    // Attempt to prevent default prevention for debugging
-                    // e.preventDefault = function() { console.log("PreventDefault called, but ignored."); };
-                    // e.stopPropagation();
-                    // Try to force submit if default is prevented
-                    console.log('Attempting to force form submission.');
-                    // Remove event listeners that might be calling preventDefault
-                    $(this).off('submit');
-                    // Trigger native form submission
-                    this.submit();
-                    
-                    // Re-add required after attempt
-                    $('input[name=captcha]').attr('required', 'required');
-
-                } else {
-                    console.log('Default form submission is NOT prevented.');
-                }
-            });
         });
     </script>
     {!! \ModStart\Core\Hook\ModStartHook::fireInView('MemberRegisterPageBodyAppend'); !!}
@@ -201,7 +369,7 @@
 
             <div class="ub-form flat">
                 <!-- 个人注册表单 -->
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form" data-type="personal">
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form="true" class="register-form" data-type="personal">
                     <input type="hidden" name="registerType" value="personal">
                     
                     <div class="line">
@@ -332,7 +500,7 @@
                 </form>
 
                 <!-- 大神入驻表单 -->
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form="true" class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data">
                 <!-- <form action="{{$__msRoot}}blog/member/register" method="post" data-ajax-form class="register-form expert-register-form" data-type="expert" style="display:none;" enctype="multipart/form-data"> -->
                     <input type="hidden" name="registerType" value="expert">
                     
@@ -508,7 +676,7 @@
                 </form>
 
                 <!-- 企业注册表单 -->
-                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form class="register-form enterprise-register-form" data-type="enterprise" style="display:none;">
+                <form action="{{\ModStart\Core\Input\Request::currentPageUrl()}}" method="post" data-ajax-form="true" class="register-form enterprise-register-form" data-type="enterprise" style="display:none;">
                     <input type="hidden" name="registerType" value="enterprise">
                     
                     <div class="form-group">
@@ -810,6 +978,24 @@
             flex-shrink: 0;
             text-align: left;
             padding-right: 15px;
+        }
+
+        /* 错误信息样式 */
+        .field-error {
+            color: #ff4d4f;
+            font-size: 12px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+        
+        .form-lg.error {
+            border-color: #ff4d4f !important;
+            box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+        }
+        
+        .form-lg.error:focus {
+            border-color: #ff4d4f !important;
+            box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
         }
 
         /* 运动标签样式 */

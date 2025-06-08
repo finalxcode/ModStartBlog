@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>注册错误显示测试</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .field-error {
+            color: #ff4d4f;
+            font-size: 12px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+        
+        .form-lg.error {
+            border-color: #ff4d4f !important;
+            box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+        }
+        
+        .form-lg {
+            width: 100%;
+            height: 40px;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #dcdee2;
+            border-radius: 4px;
+            transition: all .3s;
+            background: #fff;
+            margin-bottom: 10px;
+        }
+        
+        .field {
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>注册错误显示测试</h1>
+
+    <form id="test-form">
+        <div class="field">
+            <input type="text" name="username" class="form-lg" placeholder="用户名" value="test_user_personal">
+        </div>
+
+        <div class="field">
+            <input type="email" name="email" class="form-lg" placeholder="邮箱" value="test@example.com">
+        </div>
+
+        <div class="field">
+            <input type="tel" name="phone" class="form-lg" placeholder="手机号" value="13800138000">
+        </div>
+
+        <button type="button" id="test-btn">测试错误显示</button>
+    </form>
+
+    <script>
+        $(function() {
+            // 模拟后端返回的错误响应
+            function simulateErrorResponse() {
+                return {
+                    code: -1,
+                    msg: "表单校验失败",
+                    errors: {
+                        username: ["该用户名已被注册"],
+                        phone: ["该手机号已被注册"],
+                        email: ["该邮箱已被注册"]
+                    }
+                };
+            }
+
+            // 显示字段错误信息
+            function showFieldError(fieldName, errorMessage) {
+                var $field = $('input[name="' + fieldName + '"], select[name="' + fieldName + '"], textarea[name="' + fieldName + '"]');
+                if ($field.length > 0) {
+                    $field.addClass('error');
+                    var $errorDiv = $('<div class="field-error">' + errorMessage + '</div>');
+                    $field.closest('.field').append($errorDiv);
+                }
+            }
+
+            // 清除错误信息
+            function clearErrors() {
+                $('.field-error').remove();
+                $('.form-lg').removeClass('error');
+            }
+
+            // 当用户开始输入时清除错误信息
+            $(document).on('input change', '.form-lg.error', function() {
+                $(this).removeClass('error');
+                $(this).closest('.field').find('.field-error').remove();
+            });
+
+            // 测试按钮点击事件
+            $('#test-btn').click(function() {
+                clearErrors();
+
+                var res = simulateErrorResponse();
+
+                if (res.errors && typeof res.errors === 'object') {
+                    // 显示字段级别的错误信息
+                    for (var fieldName in res.errors) {
+                        var errors = res.errors[fieldName];
+                        if (Array.isArray(errors) && errors.length > 0) {
+                            showFieldError(fieldName, errors[0]);
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

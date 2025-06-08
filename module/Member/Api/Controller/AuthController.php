@@ -1263,7 +1263,7 @@ class AuthController extends BaseController
             }
 
             // 处理证书文件上传并保存信息到 member_meta
-            $certFiles = $form->file('certs');
+            $certFiles = $request->hasFile('certs') ? $request->file('certs') : null;
             if (!empty($certFiles)) {
                 foreach ($certFiles as $certFile) {
                     if ($certFile->isValid()) {
