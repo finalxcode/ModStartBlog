@@ -193,7 +193,7 @@
                     <div class="desc">专业创作者注册</div>
                 </div>
                 <div class="register-type-item" data-type="enterprise">
-                    <i class="iconfont icon-star"></i>
+                    <i class="iconfont icon-corp"></i>
                     <div class="title">企业注册</div>
                     <div class="desc">企业用户注册</div>
                 </div>
