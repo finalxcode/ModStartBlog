@@ -44,9 +44,13 @@ class ApiUtil
         $data['Member_OauthBindEmailEnable'] = $config->getBoolean('Member_OauthBindEmailEnable', false);
 
         // 找回密码
-        $data['retrieveDisable'] = $config->getBoolean('retrieveDisable');
-        $data['retrievePhoneEnable'] = $config->getBoolean('retrievePhoneEnable');
-        $data['retrieveEmailEnable'] = $config->getBoolean('retrieveEmailEnable');
+//        $data['retrieveDisable'] = $config->getBoolean('retrieveDisable');
+//        $data['retrievePhoneEnable'] = $config->getBoolean('retrievePhoneEnable');
+//        $data['retrieveEmailEnable'] = $config->getBoolean('retrieveEmailEnable');
+
+        $data['retrieveDisable'] = 1;
+        $data['retrievePhoneEnable'] = 1;
+        $data['retrieveEmailEnable'] = 1;
 
         // 账号安全
         $data['Member_ProfileEmailEnable'] = $config->getBoolean('Member_ProfileEmailEnable', false);

@@ -37,10 +37,10 @@
                         <div class="line">
                             <div class="field">
                                 <div class="row no-gutters">
-                                    <div class="col-10">
+                                    <div class="col-7">
                                         <input type="text" class="form-lg" name="captcha" autocomplete="off" placeholder="图片验证码" />
                                     </div>
-                                    <div class="col-2">
+                                    <div class="col-5">
                                         <img class="captcha captcha-lg" title="刷新验证" data-captcha
                                              src="{{modstart_web_url('login/captcha')}}"
                                              onclick="$(this).attr('src','{{modstart_web_url('login/captcha')}}?'+Math.random())" />

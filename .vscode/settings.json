@@ -1,4 +1,4 @@
 {
-    "editor.fontFamily": "'Fira Code','Fantasque Sans Mono','mononoki','Maple Mono ExtraLight', Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontFamily": "\"Maple Mono ExtraLight\",'Fantasque Sans Mono','mononoki','Maple Mono ExtraLight', Menlo, Monaco, 'Courier New', monospace",
     "editor.fontSize": 16
 }

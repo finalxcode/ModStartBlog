@@ -48,10 +48,10 @@
                     <div class="line">
                         <div class="field">
                             <div class="row no-gutters">
-                                <div class="col-7">
+                                <div class="col-10">
                                     <input type="text" class="form-lg" name="captcha" autocomplete="off" placeholder="图片验证码" />
                                 </div>
-                                <div class="col-5">
+                                <div class="col-2">
                                     <img class="captcha captcha-lg" data-captcha title="刷新验证" onclick="this.src='{{$__msRoot}}retrieve/captcha?'+Math.random()" src="{{$__msRoot}}retrieve/captcha?{{time()}}" />
                                 </div>
                             </div>

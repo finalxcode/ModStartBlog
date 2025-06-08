@@ -1080,7 +1080,7 @@ class AuthController extends BaseController
     public function register(\Illuminate\Http\Request $form)
     {
         $request = InputPackage::buildFromInput();
-        $registerType = $request->get('registerType', 'personal');
+        $registerType = $form->get('registerType', 'personal');
 
         $rules = [];
         $messages = [];
@@ -1154,16 +1154,7 @@ class AuthController extends BaseController
                 $messages['emailVerify.required'] = '请输入邮箱验证码';
             }
 
-            $certFiles = $form->file('certs');
-            if (empty($certFiles)) {
-                return Response::generate(1, '请上传证书');
-            }
-            if ($certFiles->getSize() > 10240) {
-                return Response::generate(1, '单个证书文件上传最大10M');
-            } else if (!in_array($certFiles->getExtension(), ['png', 'jpg', 'jpeg', 'pdf'])) {
-                return Response::generate(1, '单个证书文件必须是png、jpg或者pdf');
-            }
-            return Response::generate(1, '请上传证书');
+            // 专家注册的文件验证将在后面的文件处理部分进行
         } elseif ($registerType === 'enterprise') {
             // 企业注册验证规则
             $rules = [
@@ -1217,7 +1208,7 @@ class AuthController extends BaseController
             return back()->withErrors(['registerType' => '未知的注册类型'])->withInput();
         }
 
-        $validator = Validator::make($request->all(), $rules, $messages);
+        $validator = Validator::make($form->all(), $rules, $messages);
         if ($validator->fails()) {
             return response()->json([
                 'code' => -1,
@@ -1228,49 +1219,66 @@ class AuthController extends BaseController
 
         // 创建用户
         $member = \Module\Member\Model\MemberUser::create([
-            'username' => $request->get('username', $request->get('contactName')),
-            'phone' => $request->get('phone'),
-            'email' => $request->get('email'),
-            'password' => $request->get('password'),
+            'username' => $form->get('username', $form->get('contactName')),
+            'phone' => $form->get('phone'),
+            'email' => $form->get('email'),
+            'password' => $form->get('password'),
             'status' => 1, // 默认状态
-            'realname' => $request->get('realName', $request->get('contactName')),
-            'area' => $request->get('area', $request->get('location')),
+            'realname' => $form->get('realName', $form->get('contactName')),
+            'area' => $form->get('area', $form->get('location')),
             'expert_status' => ($registerType === 'expert') ? 1 : 0,
-            'company_type' => $request->get('companyType'),
-            'company_name' => $request->get('companyName'),
-            'company_size' => $request->get('companySize'),
-            'company_revenue' => $request->get('revenue'),
-            'company_description' => $request->get('companyDescription'),
-            'contact_position' => $request->get('contactPosition'),
-            'telephone' => $request->get('telephone'),
-            'zip_code' => $request->get('zipCode'),
-            'address' => $request->get('address'),
-            'website' => $request->get('website')
+            'company_type' => $form->get('companyType'),
+            'company_name' => $form->get('companyName'),
+            'company_size' => $form->get('companySize'),
+            'company_revenue' => $form->get('revenue'),
+            'company_description' => $form->get('companyDescription'),
+            'contact_position' => $form->get('contactPosition'),
+            'telephone' => $form->get('telephone'),
+            'zip_code' => $form->get('zipCode'),
+            'address' => $form->get('address'),
+            'website' => $form->get('website')
         ]);
 
         // 处理专家注册特有信息
         if ($registerType === 'expert') {
             // 保存喜欢的运动到 member_meta
-            $sports = $request->get('sports');
+            $sports = $form->get('sports');
             if (!empty($sports) && is_array($sports)) {
                 MemberMetaUtil::set($member->id, 'favorite_sports', json_encode($sports));
             }
 
             // 保存选择的大神库到 member_meta
-            $expertLibraries = $request->get('expert_libraries');
+            $expertLibraries = $form->get('expert_libraries');
             if (!empty($expertLibraries) && is_array($expertLibraries)) {
                 MemberMetaUtil::set($member->id, 'expert_libraries', json_encode($expertLibraries));
             }
 
             // 处理证书文件上传并保存信息到 member_meta
-            $certFiles = $request->hasFile('certs') ? $request->file('certs') : null;
+            $uploadedCertsInfo = [];
+            $certFiles = $form->hasFile('certs') ? $form->file('certs') : null;
             if (!empty($certFiles)) {
                 foreach ($certFiles as $certFile) {
                     if ($certFile->isValid()) {
-                        $originalName = $certFile->getClientOriginalName();
+                        // 验证文件大小（10MB = 10240KB）
+                        if ($certFile->getSize() > 10240 * 1024) {
+                            return response()->json([
+                                'code' => -1,
+                                'msg' => '证书文件大小不能超过10MB',
+                            ]);
+                        }
+                        
+                        // 验证文件类型
                         $extension = $certFile->getClientOriginalExtension();
+                        if (!in_array(strtolower($extension), ['png', 'jpg', 'jpeg', 'pdf'])) {
+                            return response()->json([
+                                'code' => -1,
+                                'msg' => '证书文件必须是png、jpg或pdf格式',
+                            ]);
+                        }
+                        
+                        $originalName = $certFile->getClientOriginalName();
                         // 生成唯一的存储文件名，保留原扩展名
-                        $fileName = 'cert_' . $member->id . '_' . Str::random(10) . '.' . $extension;
+                        $fileName = 'cert_' . $member->id . '_' . \Illuminate\Support\Str::random(10) . '.' . $extension;
                         $path = 'cert/' . $fileName;
                         \Illuminate\Support\Facades\Storage::put($path, file_get_contents($certFile->getRealPath()));
 

@@ -34,15 +34,15 @@
                                         class="iconfont icon-email"></i> 通过邮箱找回</a>
                                 <?php $found = true; ?>
                             @endif
-                            @if(modstart_config('retrievePhoneEnable',false))
+{{--                            @if(modstart_config('retrievePhoneEnable',false))--}}
                                 <a class="btn btn-round btn-lg btn-block btn-lg btn-primary margin-bottom"
                                    href="{{$__msRoot}}retrieve/phone?redirect={{!empty($redirect)?urlencode($redirect):''}}"><i
                                         class="iconfont icon-phone"></i> 通过手机找回</a>
                                 <?php $found = true; ?>
-                            @endif
-                            @if(!$found)
-                                <div class="ub-alert danger">没有开启任何找回密码方式</div>
-                            @endif
+{{--                            @endif--}}
+{{--                            @if(!$found)--}}
+{{--                                <div class="ub-alert danger">没有开启任何找回密码方式</div>--}}
+{{--                            @endif--}}
                         </div>
                     </div>
                 </form>

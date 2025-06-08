@@ -51,7 +51,28 @@
                 console.log('表单提交事件触发:', e);
                 console.log('表单元素:', this);
                 console.log('表单data-ajax-form属性:', $(this).attr('data-ajax-form'));
-                console.log('表单数据:', $(this).serialize());
+                
+                // 显示表单数据（根据是否有文件上传使用不同方式）
+                var $form = $(this);
+                if ($form.find('input[type="file"]').length > 0) {
+                    console.log('表单包含文件上传，将使用FormData');
+                    var formDataEntries = [];
+                    $form.find('input, select, textarea').each(function() {
+                        if (this.type !== 'file' && this.name) {
+                            if (this.type === 'checkbox' || this.type === 'radio') {
+                                if (this.checked) {
+                                    formDataEntries.push(this.name + '=' + encodeURIComponent(this.value));
+                                }
+                            } else {
+                                formDataEntries.push(this.name + '=' + encodeURIComponent(this.value));
+                            }
+                        }
+                    });
+                    console.log('表单数据（不含文件）:', formDataEntries.join('&'));
+                } else {
+                    console.log('表单数据:', $(this).serialize());
+                }
+                
                 console.log('事件是否被阻止:', e.isDefaultPrevented());
                 
                 // 阻止默认的表单提交和任何其他处理器
@@ -123,10 +144,39 @@
                 // 设置loading状态
                 $submitBtn.prop('disabled', true).text('提交中...');
                 
+                // 检查表单是否包含文件上传
+                var hasFileUpload = $form.find('input[type="file"]').length > 0;
+                var formData;
+                var contentType = false;
+                var processData = false;
+                
+                if (hasFileUpload) {
+                    // 使用FormData处理文件上传
+                    formData = new FormData($form[0]);
+                    console.log('检测到文件上传，使用FormData');
+                    
+                    // 检查文件是否被选择
+                    $form.find('input[type="file"]').each(function() {
+                        var files = this.files;
+                        console.log('文件字段 ' + this.name + ':', files.length + ' 个文件');
+                        for (var i = 0; i < files.length; i++) {
+                            console.log('文件 ' + i + ':', files[i].name, files[i].size + ' bytes');
+                        }
+                    });
+                } else {
+                    // 普通表单数据
+                    formData = $form.serialize();
+                    contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
+                    processData = true;
+                    console.log('普通表单，使用serialize');
+                }
+                
                 $.ajax({
                     url: $form.attr('action'),
                     method: $form.attr('method'),
-                    data: $form.serialize(),
+                    data: formData,
+                    contentType: contentType,
+                    processData: processData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
