@@ -4,15 +4,24 @@ namespace Module\Blog\Model;
 
 use Illuminate\Database\Eloquent\Model;
 use ModStart\Core\Dao\ModelUtil;
-use ModStart\Core\Type\TreeAble;
 
-class BlogCategory extends Model implements TreeAble
+class BlogCategory extends Model
 {
     protected $table = 'blog_category';
 
     public static function getTreeList()
     {
-        return ModelUtil::getTreeList(BlogCategory::class);
+        $models = ModelUtil::all(BlogCategory::class, [], ['*'], ['sort' => 'asc']);
+        $nodes = [];
+        foreach ($models as $model) {
+            $nodes[] = [
+                'id' => $model['id'],
+                'pid' => $model['pid'],
+                'title' => $model['title'],
+                'sort' => $model['sort']
+            ];
+        }
+        return \ModStart\Core\Util\TreeUtil::nodesToTree($nodes, 0, 'id', 'pid', 'sort');
     }
 
     public function children()
