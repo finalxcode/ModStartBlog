@@ -43,10 +43,28 @@ class BlogController extends Controller
         $categories = ModelUtil::all('blog_category');
         foreach ($categories as $cat) {
             if (!empty($cat['default_tags'])) {
-                $categoryTags[$cat['id']] = array_filter(array_map('trim', explode(',', !empty($cat['default_tags']) ? $cat[ 'default_tags'] : "")));
+                $tagsString = $cat['default_tags'];
+                
+                // 处理可能的JSON编码问题
+                if (strpos($tagsString, '["') === 0 || strpos($tagsString, "[\"") === 0) {
+                    // 尝试解码JSON
+                    $decoded = json_decode($tagsString, true);
+                    if (is_array($decoded)) {
+                        $categoryTags[$cat['id']] = array_filter(array_map('trim', $decoded));
+                    } else {
+                        // 如果JSON解码失败，按逗号分割
+                        $categoryTags[$cat['id']] = array_filter(array_map('trim', explode(',', $tagsString)));
+                    }
+                } else {
+                    // 正常按逗号分割
+                    $categoryTags[$cat['id']] = array_filter(array_map('trim', explode(',', $tagsString)));
+                }
             }
         }
 
+        // 调试：输出分类标签数据
+        Log::info('页面加载时的分类标签数据', ['categoryTags' => $categoryTags]);
+        
         \ModStart\ModStart::script('window.categoryTags = ' . json_encode($categoryTags) . ';');
         
         // 添加级联分类选择的JavaScript
@@ -65,9 +83,14 @@ class BlogController extends Controller
                 
                 var currentCategoryId = $childSelect.val();
                 
-                // 页面加载时，如果已选择二级分类，则加载对应的选项
+                // 页面加载时，如果已选择二级分类，则加载对应的选项和标签
                 if ($parentSelect.val()) {
                     loadSubcategories($parentSelect.val(), currentCategoryId);
+                }
+                
+                // 页面加载时，如果已选择二级分类，则更新标签选项
+                if (currentCategoryId) {
+                    updateTagOptions(currentCategoryId);
                 }
                 
                 function loadSubcategories(parentId, selectedId) {
@@ -114,22 +137,28 @@ class BlogController extends Controller
                 $childSelect.on("change", function() {
                     var categoryId = $(this).val();
                     console.log("二级分类变更:", categoryId);
-                    updateCategoryTags(categoryId);
+                    updateTagOptions(categoryId);
                 });
                 
-                function updateCategoryTags(categoryId) {
-                    if (!categoryId) {
-                        return;
-                    }
+                function updateTagOptions(categoryId) {
+                    console.log("更新标签选项:", categoryId);
                     
-                    // 首先尝试使用已缓存的标签数据
-                    if (window.categoryTags && window.categoryTags[categoryId]) {
+                    var tags = [];
+                    
+                    if (categoryId && window.categoryTags && window.categoryTags[categoryId]) {
                         console.log("使用缓存的标签数据:", window.categoryTags[categoryId]);
-                        updateTagField(window.categoryTags[categoryId]);
+                        tags = window.categoryTags[categoryId];
+                        updateTagFieldOptions(tags);
                         return;
                     }
                     
-                    // 如果没有缓存数据，通过AJAX获取
+                    if (!categoryId) {
+                        // 清空标签选项
+                        updateTagFieldOptions([]);
+                        return;
+                    }
+                    
+                    // 通过AJAX获取分类标签
                     console.log("通过AJAX获取分类标签:", categoryId);
                     $.ajax({
                         url: "/admin/blog/category-tags/" + categoryId,
@@ -143,52 +172,135 @@ class BlogController extends Controller
                                     window.categoryTags = {};
                                 }
                                 window.categoryTags[categoryId] = data.data;
-                                updateTagField(data.data);
+                                updateTagFieldOptions(data.data);
+                            } else {
+                                console.error("获取标签失败:", data.msg);
+                                updateTagFieldOptions([]);
                             }
                         },
                         error: function(xhr, status, error) {
                             console.error("获取分类标签失败:", status, error);
+                            updateTagFieldOptions([]);
                         }
                     });
                 }
                 
-                function updateTagField(tags) {
-                    console.log("更新标签字段:", tags);
+                function updateTagFieldOptions(tags) {
+                    console.log("更新标签字段选项:", tags);
                     
-                    var $tagInput = $("[name=\"tag\"]");
-                    if ($tagInput.length > 0) {
-                        // 查找标签字段的容器
-                        var $tagContainer = $tagInput.closest(".ub-form-item");
-                        if ($tagContainer.length > 0) {
-                            // 添加推荐标签提示
-                            var $tagHelp = $tagContainer.find(".help-block");
-                            if ($tagHelp.length === 0) {
-                                $tagHelp = $("<div class=\"help-block\"></div>");
-                                $tagContainer.append($tagHelp);
-                            }
-                            
-                            if (tags && tags.length > 0) {
-                                var tagButtons = tags.map(function(tag) {
-                                    return "<span class=\"label label-info\" style=\"margin-right:5px;cursor:pointer;\" onclick=\"addQuickTag(\'" + tag + "\')\">" + tag + "</span>";
-                                }).join(" ");
-                                $tagHelp.html("推荐标签：" + tagButtons);
-                                
-                                // 定义添加快速标签的函数
-                                if (typeof window.addQuickTag === "undefined") {
-                                    window.addQuickTag = function(tag) {
-                                        var currentValue = $tagInput.val();
-                                        var tags = currentValue ? currentValue.split(",").map(function(t) { return t.trim(); }) : [];
-                                        if (tags.indexOf(tag) === -1) {
-                                            tags.push(tag);
-                                            $tagInput.val(tags.join(",")).trigger("change");
-                                        }
-                                    };
-                                }
-                            } else {
-                                $tagHelp.html("此分类暂无推荐标签");
-                            }
-                        }
+                    // 查找标签输入框
+                    var $tagInput = $("input[name=\"tag\"]");
+                    if ($tagInput.length === 0) {
+                        console.log("未找到标签输入框");
+                        return;
                     }
+                    
+                    // 存储当前分类的推荐标签到全局变量
+                    window.currentCategoryTags = tags || [];
+                    console.log("已设置当前分类标签:", window.currentCategoryTags);
+                    
+                    // 检查是否已经设置了自动完成
+                    if (!window.tagAutocompleteSetup) {
+                        setupTagAutocomplete();
+                        window.tagAutocompleteSetup = true;
+                    }
+                }
+                
+                function setupTagAutocomplete() {
+                    var $tagInput = $("input[name=\"tag\"]");
+                    
+                    // 设置输入框的自动完成功能
+                    $tagInput.on("input focus", function() {
+                        var inputValue = this.value;
+                        var lastCommaIndex = inputValue.lastIndexOf(",");
+                        var currentTyping = "";
+                        
+                        if (lastCommaIndex >= 0) {
+                            currentTyping = inputValue.substring(lastCommaIndex + 1).trim();
+                        } else {
+                            currentTyping = inputValue.trim();
+                        }
+                        
+                        showTagSuggestions(currentTyping, this);
+                    });
+                    
+                    // 点击其他地方时隐藏建议
+                    $(document).on("click", function(e) {
+                        if (!$(e.target).closest(".tag-suggestions, input[name=\"tag\"]").length) {
+                            $(".tag-suggestions").remove();
+                        }
+                    });
+                }
+                
+                function showTagSuggestions(typingText, inputElement) {
+                    // 移除之前的建议
+                    $(".tag-suggestions").remove();
+                    
+                    if (!window.currentCategoryTags || window.currentCategoryTags.length === 0) {
+                        return;
+                    }
+                    
+                    var $input = $(inputElement);
+                    var suggestions = [];
+                    
+                    // 如果用户没有输入，显示所有推荐标签
+                    if (!typingText) {
+                        suggestions = window.currentCategoryTags.slice(0, 8); // 最多显示8个
+                    } else {
+                        // 过滤匹配的标签
+                        suggestions = window.currentCategoryTags.filter(function(tag) {
+                            return tag.toLowerCase().indexOf(typingText.toLowerCase()) >= 0;
+                        }).slice(0, 8);
+                    }
+                    
+                    if (suggestions.length === 0) {
+                        return;
+                    }
+                    
+                    // 创建建议下拉框
+                    var $suggestions = $("<div class=\"tag-suggestions\" style=\"position:absolute;background:white;border:1px solid #ccc;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1);z-index:1000;max-width:300px;\"></div>");
+                    
+                    suggestions.forEach(function(tag) {
+                        var $item = $("<div class=\"suggestion-item\" style=\"padding:8px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;\" data-tag=\"" + tag + "\">" + tag + "</div>");
+                        
+                        $item.hover(
+                            function() { $(this).css("background-color", "#f5f5f5"); },
+                            function() { $(this).css("background-color", "white"); }
+                        );
+                        
+                        $item.on("click", function() {
+                            var selectedTag = $(this).data("tag");
+                            insertTag(selectedTag, inputElement);
+                            $(".tag-suggestions").remove();
+                        });
+                        
+                        $suggestions.append($item);
+                    });
+                    
+                    // 定位建议框
+                    var inputOffset = $input.offset();
+                    $suggestions.css({
+                        "top": inputOffset.top + $input.outerHeight(),
+                        "left": inputOffset.left
+                    });
+                    
+                    $("body").append($suggestions);
+                }
+                
+                function insertTag(tag, inputElement) {
+                    var $input = $(inputElement);
+                    var currentValue = $input.val();
+                    var lastCommaIndex = currentValue.lastIndexOf(",");
+                    var newValue = "";
+                    
+                    if (lastCommaIndex >= 0) {
+                        newValue = currentValue.substring(0, lastCommaIndex + 1) + " " + tag;
+                    } else {
+                        newValue = tag;
+                    }
+                    
+                    $input.val(newValue).trigger("change").focus();
+                    console.log("已插入标签:", tag);
                 }
             });
         ');
@@ -232,9 +344,19 @@ class BlogController extends Controller
                     })->required();
                 $builder->richHtml('content', '内容')->required();
                 $builder->textarea('summary', '摘要')->listable(false);
-                $builder->tags('tag', '标签')->addVariables(['categoryTags' => $categoryTags])
+                // 构建扁平化的标签数组，用于标签字段的基础选项
+                $allTags = [];
+                foreach ($categoryTags as $catId => $tags) {
+                    foreach ($tags as $tag) {
+                        if (!empty($tag) && $tag !== 'undefined') {
+                            $allTags[$tag] = $tag;
+                        }
+                    }
+                }
+                
+                $builder->tags('tag', '标签')
                     ->serializeType(Tags::SERIALIZE_TYPE_COLON_SEPARATED)
-                    ->tagModelField('blog', 'tag', Tags::SERIALIZE_TYPE_COLON_SEPARATED);
+                    ->tags($allTags);
                 $builder->images('images', '图片')->listable(false);
                 $builder->text('seoKeywords', 'SEO关键词')->listable(false);
                 $builder->textarea('seoDescription', 'SEO描述')->listable(false);
@@ -351,24 +473,52 @@ class BlogController extends Controller
      */
     public function categoryTags($categoryId)
     {
-        $category = ModelUtil::get('blog_category', $categoryId);
-        
-        if (empty($category)) {
-            return Response::generate(-1, '分类不存在');
+        try {
+            $category = ModelUtil::get('blog_category', $categoryId);
+            
+            if (empty($category)) {
+                Log::warning('分类不存在', ['categoryId' => $categoryId]);
+                return Response::generate(-1, '分类不存在');
+            }
+            
+            $tags = [];
+            if (!empty($category['default_tags'])) {
+                $tagsString = $category['default_tags'];
+                
+                // 处理可能的JSON编码问题
+                if (strpos($tagsString, '["') === 0 || strpos($tagsString, "[\"") === 0) {
+                    // 尝试解码JSON
+                    $decoded = json_decode($tagsString, true);
+                    if (is_array($decoded)) {
+                        $tags = array_filter(array_map('trim', $decoded));
+                    } else {
+                        // 如果JSON解码失败，按逗号分割
+                        $tags = array_filter(array_map('trim', explode(',', $tagsString)));
+                    }
+                } else {
+                    // 正常按逗号分割
+                    $tags = array_filter(array_map('trim', explode(',', $tagsString)));
+                }
+            }
+            
+            Log::info('获取分类标签', [
+                'categoryId' => $categoryId,
+                'categoryTitle' => $category['title'],
+                'categoryPid' => $category['pid'],
+                'defaultTags' => $category['default_tags'],
+                'parsedTags' => $tags,
+                'tagCount' => count($tags)
+            ]);
+            
+            return Response::generate(0, 'success', $tags);
+        } catch (\Exception $e) {
+            Log::error('获取分类标签失败', [
+                'categoryId' => $categoryId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return Response::generate(-1, '获取标签失败: ' . $e->getMessage());
         }
-        
-        $tags = [];
-        if (!empty($category['default_tags'])) {
-            $tags = array_filter(array_map('trim', explode(',', $category['default_tags'])));
-        }
-        
-        Log::info('获取分类标签', [
-            'categoryId' => $categoryId,
-            'categoryTitle' => $category['title'],
-            'tags' => $tags
-        ]);
-        
-        return Response::generate(0, 'success', $tags);
     }
 
     public function import(ImportHandle $handle)
