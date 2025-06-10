@@ -5,6 +5,7 @@ namespace Module\Blog\Admin\Controller;
 
 
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use ModStart\Admin\Concern\HasAdminQuickCRUD;
 use ModStart\Admin\Layout\AdminCRUDBuilder;
 use ModStart\Core\Dao\ModelUtil;
@@ -46,16 +47,100 @@ class BlogController extends Controller
             }
         }
 
-//        dd($categoryTags);
-
         \ModStart\ModStart::script('window.categoryTags = ' . json_encode($categoryTags) . ';');
+        
+        // 添加级联分类选择的JavaScript
+        \ModStart\ModStart::script('
+            $(document).ready(function() {
+                // 使用更准确的选择器
+                var $parentSelect = $("select[name=\"parentCategoryId\"], input[name=\"parentCategoryId\"]");
+                var $childSelect = $("select[name=\"categoryId\"], input[name=\"categoryId\"]");
+                
+                console.log("级联分类初始化:", {
+                    parentSelect: $parentSelect.length,
+                    childSelect: $childSelect.length,
+                    parentValue: $parentSelect.val(),
+                    childValue: $childSelect.val()
+                });
+                
+                var currentCategoryId = $childSelect.val();
+                
+                // 页面加载时，如果已选择二级分类，则加载对应的选项
+                if ($parentSelect.val()) {
+                    loadSubcategories($parentSelect.val(), currentCategoryId);
+                }
+                
+                function loadSubcategories(parentId, selectedId) {
+                    console.log("加载二级分类:", parentId, selectedId);
+                    
+                    if (parentId) {
+                        $childSelect.html("<option value=\"\">加载中...</option>");
+                        
+                        $.ajax({
+                            url: "/admin/blog/subcategories/" + parentId,
+                            type: "GET",
+                            dataType: "json",
+                            success: function(data) {
+                                console.log("AJAX响应:", data);
+                                
+                                if (data.code === 0 && data.data) {
+                                    $childSelect.html("<option value=\"\">请选择二级分类</option>");
+                                    $.each(data.data, function(index, item) {
+                                        var selected = (selectedId && selectedId == item.id) ? " selected" : "";
+                                        $childSelect.append("<option value=\"" + item.id + "\"" + selected + ">" + item.title + "</option>");
+                                    });
+                                } else {
+                                    $childSelect.html("<option value=\"\">加载失败</option>");
+                                    console.error("数据格式错误:", data);
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("AJAX请求失败:", status, error);
+                                $childSelect.html("<option value=\"\">加载失败，请重试</option>");
+                            }
+                        });
+                    } else {
+                        $childSelect.html("<option value=\"\">请先选择一级分类</option>");
+                    }
+                }
+                
+                $parentSelect.on("change", function() {
+                    var parentId = $(this).val();
+                    console.log("一级分类变更:", parentId);
+                    loadSubcategories(parentId, null);
+                });
+            });
+        ');
 
         $builder
             ->init('blog')
             ->field(function ($builder) use ($categoryTags) {
                 /** @var HasFields $builder */
                 $builder->id('id', 'ID');
-                $builder->select('categoryId', '分类')->optionModelTree('blog_category');
+                // 级联分类选择：先选一级分类，再选二级分类
+                $builder->select('parentCategoryId', '一级分类')
+                    ->optionModel('blog_category', 'id', 'title', ['pid' => 0])
+                    ->required()
+                    ->listable(false)
+                    ->hookRendering(function (AbstractField $field, $item, $index) {
+                        // 编辑时，根据二级分类自动设置一级分类
+                        if ($field->renderMode() == FieldRenderMode::FORM && !empty($item->categoryId)) {
+                            $category = ModelUtil::get('blog_category', $item->categoryId);
+                            if ($category && $category['pid'] > 0) {
+                                $field->defaultValue($category['pid']);
+                            }
+                        }
+                    })
+                    ->hookValueSerialize(function ($value, AbstractField $field) {
+                        // 这个字段仅用于界面选择，不保存到数据库
+                        // 通过设置column为空字符串来避免保存
+                        $field->column('');
+                        return $value;
+                    });
+                    
+                $builder->select('categoryId', '二级分类')
+                    ->required()
+                    ->help('请先选择一级分类，然后选择对应的二级分类');
                 $builder->text('title', '标题')
                     ->hookRendering(function (AbstractField $field, $item, $index) {
                         switch ($field->renderMode()) {
@@ -120,6 +205,18 @@ class BlogController extends Controller
             ->gridOperateAppend(ButtonDialogRequest::primary('<i class="iconfont icon-upload"></i> 批量导入', action('\\' . __CLASS__ . '@import')))
             ->pageJumpEnable(true)
             ->hookSaving(function (Form $form) use (&$updatedCategoryIds) {
+                // 验证必须选择二级分类
+                $categoryId = $form->getItemValue('categoryId');
+                if (empty($categoryId)) {
+                    throw new BizException('请选择二级分类');
+                }
+                
+                // 验证选择的确实是二级分类（pid不为0）
+                $category = ModelUtil::get('blog_category', $categoryId);
+                if (empty($category) || $category['pid'] == 0) {
+                    throw new BizException('必须选择二级分类，不能直接选择一级分类');
+                }
+                
                 if ($form->itemId()) {
                     $blog = ModelUtil::get('blog', $form->itemId());
                     if (!empty($blog['categoryId'])) {
@@ -149,6 +246,23 @@ class BlogController extends Controller
                 });
             })
             ->title('博客文章');
+    }
+
+    /**
+     * 获取二级分类数据
+     */
+    public function subcategories($parentId)
+    {
+        $subcategories = ModelUtil::all('blog_category', ['pid' => $parentId], ['id', 'title'], ['sort', 'asc']);
+        
+        // 记录日志以便调试
+        Log::info('获取二级分类', [
+            'parentId' => $parentId,
+            'count' => count($subcategories),
+            'data' => $subcategories
+        ]);
+        
+        return Response::generate(0, 'success', $subcategories);
     }
 
     public function import(ImportHandle $handle)
