@@ -28,6 +28,12 @@ class BlogCategoryController extends Controller
                 $builder->image('cover', '封面')->help('默认模板不显示，可安装更多模板查看效果');
                 $builder->text('keywords', '关键词');
                 $builder->textarea('description', '描述');
+                
+                // 标签管理（主要用于二级分类）
+                $builder->tags('default_tags', '默认标签')
+                    ->help('为此分类设置默认标签，用户在选择此分类时可以快速选择这些标签（建议只为二级分类设置）')
+                    ->listable(false);
+                    
                 $builder->select('templateView', '列表模板')->optionType(BlogCategoryTemplateView::class);
                 $builder->display('blogCount', '博客数')->listable(true)->addable(false)->editable(false);
                 $builder->display('created_at', L('Created At'))->listable(false);

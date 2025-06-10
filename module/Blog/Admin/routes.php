@@ -20,6 +20,7 @@ Route::match(['post'], 'blog/blog/delete', 'BlogController@delete');
 Route::match(['get'], 'blog/blog/show', 'BlogController@show');
 Route::match(['get', 'post'], 'blog/blog/import', 'BlogController@import');
 Route::match(['get'], 'blog/subcategories/{parentId}', 'BlogController@subcategories');
+Route::match(['get'], 'blog/category-tags/{categoryId}', 'BlogController@categoryTags');
 
 Route::match(['get', 'post'], 'blog/comment', 'BlogCommentController@index');
 Route::match(['get', 'post'], 'blog/comment/add', 'BlogCommentController@add');

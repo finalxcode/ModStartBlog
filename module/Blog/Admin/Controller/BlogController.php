@@ -109,6 +109,87 @@ class BlogController extends Controller
                     console.log("一级分类变更:", parentId);
                     loadSubcategories(parentId, null);
                 });
+                
+                // 添加二级分类变更时的标签更新
+                $childSelect.on("change", function() {
+                    var categoryId = $(this).val();
+                    console.log("二级分类变更:", categoryId);
+                    updateCategoryTags(categoryId);
+                });
+                
+                function updateCategoryTags(categoryId) {
+                    if (!categoryId) {
+                        return;
+                    }
+                    
+                    // 首先尝试使用已缓存的标签数据
+                    if (window.categoryTags && window.categoryTags[categoryId]) {
+                        console.log("使用缓存的标签数据:", window.categoryTags[categoryId]);
+                        updateTagField(window.categoryTags[categoryId]);
+                        return;
+                    }
+                    
+                    // 如果没有缓存数据，通过AJAX获取
+                    console.log("通过AJAX获取分类标签:", categoryId);
+                    $.ajax({
+                        url: "/admin/blog/category-tags/" + categoryId,
+                        type: "GET",
+                        dataType: "json",
+                        success: function(data) {
+                            console.log("标签AJAX响应:", data);
+                            if (data.code === 0) {
+                                // 更新缓存
+                                if (!window.categoryTags) {
+                                    window.categoryTags = {};
+                                }
+                                window.categoryTags[categoryId] = data.data;
+                                updateTagField(data.data);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("获取分类标签失败:", status, error);
+                        }
+                    });
+                }
+                
+                function updateTagField(tags) {
+                    console.log("更新标签字段:", tags);
+                    
+                    var $tagInput = $("[name=\"tag\"]");
+                    if ($tagInput.length > 0) {
+                        // 查找标签字段的容器
+                        var $tagContainer = $tagInput.closest(".ub-form-item");
+                        if ($tagContainer.length > 0) {
+                            // 添加推荐标签提示
+                            var $tagHelp = $tagContainer.find(".help-block");
+                            if ($tagHelp.length === 0) {
+                                $tagHelp = $("<div class=\"help-block\"></div>");
+                                $tagContainer.append($tagHelp);
+                            }
+                            
+                            if (tags && tags.length > 0) {
+                                var tagButtons = tags.map(function(tag) {
+                                    return "<span class=\"label label-info\" style=\"margin-right:5px;cursor:pointer;\" onclick=\"addQuickTag(\'" + tag + "\')\">" + tag + "</span>";
+                                }).join(" ");
+                                $tagHelp.html("推荐标签：" + tagButtons);
+                                
+                                // 定义添加快速标签的函数
+                                if (typeof window.addQuickTag === "undefined") {
+                                    window.addQuickTag = function(tag) {
+                                        var currentValue = $tagInput.val();
+                                        var tags = currentValue ? currentValue.split(",").map(function(t) { return t.trim(); }) : [];
+                                        if (tags.indexOf(tag) === -1) {
+                                            tags.push(tag);
+                                            $tagInput.val(tags.join(",")).trigger("change");
+                                        }
+                                    };
+                                }
+                            } else {
+                                $tagHelp.html("此分类暂无推荐标签");
+                            }
+                        }
+                    }
+                }
             });
         ');
 
@@ -263,6 +344,31 @@ class BlogController extends Controller
         ]);
         
         return Response::generate(0, 'success', $subcategories);
+    }
+
+    /**
+     * 获取分类的标签数据
+     */
+    public function categoryTags($categoryId)
+    {
+        $category = ModelUtil::get('blog_category', $categoryId);
+        
+        if (empty($category)) {
+            return Response::generate(-1, '分类不存在');
+        }
+        
+        $tags = [];
+        if (!empty($category['default_tags'])) {
+            $tags = array_filter(array_map('trim', explode(',', $category['default_tags'])));
+        }
+        
+        Log::info('获取分类标签', [
+            'categoryId' => $categoryId,
+            'categoryTitle' => $category['title'],
+            'tags' => $tags
+        ]);
+        
+        return Response::generate(0, 'success', $tags);
     }
 
     public function import(ImportHandle $handle)
