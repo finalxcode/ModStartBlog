@@ -1,4 +1,5 @@
 {
     "editor.fontFamily": "'Monaspace Neon ExtraLight','Luxi Mono','Maple Mono ExtraLight','Fantasque Sans Mono','Luxi Mono','Monaspace Neon ExtraLight','Monaspace','IntelOne Mono','ComicShannsMono Nerd Font Propo','FiraCode Nerd Font Mono','Luxi Mono','American Typewriter','Fire Code','Fire Code','Luxi Mono','Operator Mono Lig','JetBrains Mono','PT Mono','SF Mono',Monolisa, Monoid,'IntelOne Mono','Cascadia Code','LXGW WenKai','Cascadia Code','Souce Code Pro','Fire Code','JetBrains Mono'",
-    "editor.fontSize": 16
+    "editor.fontSize": 16,
+    "terminal.integrated.fontFamily": "monospace"
 }

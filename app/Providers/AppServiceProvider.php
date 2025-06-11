@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
+use App\Services\TaskmasterService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-
+        // Register TaskmasterService as singleton
+        $this->app->singleton(TaskmasterService::class, function ($app) {
+            return new TaskmasterService();
+        });
     }
 }

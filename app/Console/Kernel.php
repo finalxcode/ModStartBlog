@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\MigrateJob::class,
         Commands\DumpDemoDataCommand::class,
+        Commands\TaskmasterTest::class,
     ];
 
     /**
