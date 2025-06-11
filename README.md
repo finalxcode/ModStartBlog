@@ -1,4 +1,3 @@
-
 <p align="center">
   <a href="https://modstart.com">
     <img src="https://ms-assets.modstart.com/data/image/2021/09/08/23652_1f1j_9825.png" alt="ModStart" width="360" />
@@ -45,6 +44,36 @@
 
 # 现代化个人博客系统
 
+## 🤖 AI 增强功能
+
+基于 `taskmaster-ai` 的智能博客管理系统，集成AI驱动的任务管理和内容增强功能：
+
+### AI 功能特性
+- **智能任务管理**：自动生成写作任务和内容优化建议
+- **内容质量分析**：AI评估博客文章质量并提供改进建议  
+- **自动标签生成**：基于内容自动创建和分类标签
+- **工作流自动化**：智能化内容审核和发布流程
+- **性能跟踪**：AI驱动的内容表现分析和建议
+
+### AI 设置要求
+- Node.js 环境支持 taskmaster-ai
+- AI API 密钥配置 (OpenRouter/Claude/OpenAI)
+- Docker 环境包含 AI 集成组件
+
+### AI 快速开始
+```bash
+# 1. 查看AI任务列表
+npx task-master list
+
+# 2. 查看下一个任务
+npx task-master next
+
+# 3. 开始处理任务
+npx task-master set-status --id=<id> --status=in-progress
+
+# 4. 完成任务
+npx task-master set-status --id=<id> --status=done
+```
 
 ##  🔥 功能一览
 
