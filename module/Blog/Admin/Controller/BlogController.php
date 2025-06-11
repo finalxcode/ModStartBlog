@@ -249,7 +249,11 @@ class BlogController extends Controller
                     $tagInput.on("input.tagAutocomplete keyup.tagAutocomplete", function() {
                         var inputValue = $(this).text() || "";  // 使用text()而不是val()
                         console.log("用户输入:", inputValue);
-                        showTagSuggestions(inputValue.trim(), $tagifyContainer[0]);
+                        
+                        // 只有当用户真正在输入时才过滤，点击选择时不过滤
+                        if (!window.selectingTag) {
+                            showTagSuggestions(inputValue.trim(), $tagifyContainer[0]);
+                        }
                     });
                     
                     // 失去焦点时隐藏建议
@@ -303,12 +307,26 @@ class BlogController extends Controller
                     var $input = $(inputElement);
                     var suggestions = [];
                     
-                    // 如果用户没有输入，显示所有推荐标签
+                    // 获取已经添加的标签
+                    var $hiddenInput = $("input[name=\"tag\"]");
+                    var existingTags = [];
+                    if ($hiddenInput.val()) {
+                        existingTags = $hiddenInput.val().split(":").filter(function(t) {
+                            return t && t.trim() !== "";
+                        });
+                    }
+                    
+                    // 过滤掉已存在的标签
+                    var availableTags = currentTags.filter(function(tag) {
+                        return existingTags.indexOf(tag) === -1;
+                    });
+                    
+                    // 如果用户没有输入，显示所有可用的推荐标签
                     if (!typingText) {
-                        suggestions = currentTags.slice(0, 8); // 最多显示8个
+                        suggestions = availableTags.slice(0, 8); // 最多显示8个
                     } else {
                         // 过滤匹配的标签
-                        suggestions = currentTags.filter(function(tag) {
+                        suggestions = availableTags.filter(function(tag) {
                             return tag.toLowerCase().indexOf(typingText.toLowerCase()) >= 0;
                         }).slice(0, 8);
                     }
@@ -339,10 +357,25 @@ class BlogController extends Controller
                             e.stopPropagation();
                             var selectedTag = $(this).data("tag");
                             console.log("点击选择标签:", selectedTag, "容器:", inputElement);
+                            
+                            // 设置标志防止输入事件干扰
+                            window.selectingTag = true;
+                            
                             insertTag(selectedTag, inputElement);
                             $(".tag-suggestions").remove();
-                            // 让Tagify输入框重新获得焦点
-                            $(inputElement).find(".tagify__input").focus();
+                            
+                            // 清空输入框内容并重新获得焦点
+                            setTimeout(function() {
+                                var $tagifyInput = $(inputElement).find(".tagify__input");
+                                $tagifyInput.text("");
+                                $tagifyInput.focus();
+                                
+                                // 重置标志
+                                setTimeout(function() {
+                                    window.selectingTag = false;
+                                }, 100);
+                            }, 100);
+                            
                             return false;
                         });
                         
@@ -397,60 +430,157 @@ class BlogController extends Controller
                 function insertTag(tag, tagifyContainer) {
                     console.log("插入标签到Tagify:", tag, "容器:", tagifyContainer);
                     
-                    // 获取Tagify实例
                     var $container = $(tagifyContainer);
                     var $hiddenInput = $("input[name=\"tag\"]");
                     var $tagifyInput = $container.find(".tagify__input");
                     
-                    console.log("Tagify组件信息:", {
+                    console.log("DOM元素检查:", {
                         container: $container[0],
                         hiddenInput: $hiddenInput[0],
                         tagifyInput: $tagifyInput[0]
                     });
                     
-                    // 方法1：尝试通过Tagify的API添加标签
-                    if (window.tagify && $container[0] && $container[0].tagify) {
-                        console.log("使用Tagify API添加标签");
-                        $container[0].tagify.addTags([tag]);
-                        return;
+                    // 查找jQuery.tagify实例
+                    var tagifyInstance = null;
+                    
+                    // ModStart使用的是jQuery.tagify，实例存储在jQuery对象的data中
+                    // 查找隐藏输入框的tagify实例
+                    if ($hiddenInput.length > 0) {
+                        // 方法1：从jQuery data查找
+                        tagifyInstance = $hiddenInput.data("tagify");
+                        if (tagifyInstance) {
+                            console.log("从jQuery data找到Tagify实例");
+                        }
+                        
+                        // 方法2：从jQuery实例查找
+                        if (!tagifyInstance && typeof $hiddenInput.tagify === "function") {
+                            // 尝试获取已存在的实例
+                            try {
+                                var jqueryData = $hiddenInput.data();
+                                for (var key in jqueryData) {
+                                    if (key.indexOf("tagify") !== -1) {
+                                        tagifyInstance = jqueryData[key];
+                                        console.log("从jQuery内部data找到Tagify实例:", key);
+                                        break;
+                                    }
+                                }
+                            } catch (e) {
+                                console.log("查找jQuery内部data失败:", e);
+                            }
+                        }
+                        
+                        // 方法3：通过原始DOM元素查找
+                        if (!tagifyInstance && $hiddenInput[0]) {
+                            var elem = $hiddenInput[0];
+                            if (elem.tagify) {
+                                tagifyInstance = elem.tagify;
+                                console.log("从原始DOM元素找到Tagify实例");
+                            }
+                        }
                     }
                     
-                    // 方法2：直接操作隐藏输入框
+                    console.log("最终找到的Tagify实例:", tagifyInstance);
+                    
+                    // 方法1：使用jQuery.tagify API
+                    if (tagifyInstance) {
+                        console.log("使用jQuery.tagify实例添加标签");
+                        try {
+                            // jQuery.tagify的API方式
+                            if (typeof tagifyInstance.addTags === "function") {
+                                tagifyInstance.addTags([tag]);
+                                console.log("成功通过addTags添加标签:", tag);
+                                return;
+                            } else if (typeof $hiddenInput.tagify === "function") {
+                                // 通过jQuery接口添加
+                                $hiddenInput.tagify("addTags", [tag]);
+                                console.log("成功通过jQuery接口添加标签:", tag);
+                                return;
+                            }
+                        } catch (e) {
+                            console.error("Tagify API失败:", e);
+                        }
+                    }
+                    
+                    // 方法1.5：尝试直接通过jQuery.tagify接口
+                    if (typeof $hiddenInput.tagify === "function") {
+                        console.log("尝试直接使用jQuery.tagify接口");
+                        try {
+                            $hiddenInput.tagify("addTags", [tag]);
+                            console.log("成功通过直接接口添加标签:", tag);
+                            return;
+                        } catch (e) {
+                            console.error("jQuery.tagify接口失败:", e);
+                        }
+                    }
+                    
+                    console.log("所有API方法失败，使用备用方法");
+                    
+                    // 方法2：直接更新隐藏字段并重新初始化Tagify
+                    console.log("使用直接更新方法添加标签");
+                    
+                    // 更新隐藏字段
                     var currentValue = $hiddenInput.val() || "";
                     var newValue = "";
                     
-                    console.log("当前隐藏输入框值:", currentValue);
-                    
-                    if (currentValue.trim() === "") {
+                    if (currentValue === "") {
                         newValue = tag;
                     } else {
-                        // 检查是否已经包含该标签（用冒号分隔）
+                        // 确保不重复添加
                         var existingTags = currentValue.split(":").filter(function(t) { return t.trim() !== ""; });
                         if (existingTags.indexOf(tag) === -1) {
-                            newValue = currentValue.trim();
-                            if (!newValue.endsWith(":")) {
-                                newValue += ":";
-                            }
-                            newValue += tag;
+                            newValue = currentValue + ":" + tag;
                         } else {
                             console.log("标签已存在，跳过添加");
                             return;
                         }
                     }
                     
-                    console.log("设置新的隐藏输入框值:", newValue);
+                    console.log("更新隐藏字段值:", newValue);
                     $hiddenInput.val(newValue);
                     
-                    // 方法3：尝试通过模拟用户输入来添加标签
-                    $tagifyInput.text(tag);
-                    $tagifyInput.trigger("input");
-                    $tagifyInput.trigger("keydown", { keyCode: 13 }); // 模拟回车键
+                    // 方法2.1：如果有Tagify实例，尝试重新加载值
+                    if (tagifyInstance) {
+                        try {
+                            // 尝试各种Tagify更新方法
+                            if (typeof tagifyInstance.loadOriginalValues === "function") {
+                                tagifyInstance.loadOriginalValues();
+                                console.log("使用loadOriginalValues更新");
+                            } else if (typeof tagifyInstance.DOM.scope.refresh === "function") {
+                                tagifyInstance.DOM.scope.refresh();
+                                console.log("使用refresh更新");
+                            } else {
+                                // 手动重建标签
+                                var tags = newValue.split(":").filter(function(t) { return t.trim() !== ""; });
+                                tagifyInstance.removeAllTags();
+                                tagifyInstance.addTags(tags);
+                                console.log("手动重建标签");
+                            }
+                        } catch (e) {
+                            console.error("Tagify更新失败:", e);
+                        }
+                    }
                     
-                    // 触发各种事件确保值被正确保存
-                    $hiddenInput.trigger("input");
-                    $hiddenInput.trigger("change");
-                    
-                    console.log("标签已插入:", tag, "最终隐藏值:", $hiddenInput.val());
+                    // 方法2.2：强制重新渲染
+                    setTimeout(function() {
+                        // 触发change事件
+                        $hiddenInput.trigger("change");
+                        
+                        // 如果仍然没有显示，尝试重新创建Tagify
+                        if ($container.hasClass("tagify--empty")) {
+                            console.log("标签仍然为空，尝试强制重新渲染");
+                            
+                            // 临时移除然后重新添加值
+                            var tempValue = $hiddenInput.val();
+                            $hiddenInput.val("").trigger("change");
+                            
+                            setTimeout(function() {
+                                $hiddenInput.val(tempValue).trigger("change");
+                                console.log("强制重新渲染完成");
+                            }, 100);
+                        }
+                        
+                        console.log("标签插入完成，最终隐藏字段值:", $hiddenInput.val());
+                    }, 100);
                 }
             });
         ');
