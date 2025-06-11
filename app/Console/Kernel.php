@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
         Commands\MigrateJob::class,
         Commands\DumpDemoDataCommand::class,
         Commands\TaskmasterTest::class,
+        Commands\TaskSync::class,
     ];
 
     /**

@@ -28,5 +28,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TaskmasterService::class, function ($app) {
             return new TaskmasterService();
         });
+        
+        // Register TaskDatabaseSync service
+        $this->app->singleton('App\Services\TaskDatabaseSync', function ($app) {
+            return new \App\Services\TaskDatabaseSync($app->make(TaskmasterService::class));
+        });
     }
 }
