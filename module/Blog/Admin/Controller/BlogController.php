@@ -591,24 +591,35 @@ class BlogController extends Controller
                 /** @var HasFields $builder */
                 $builder->id('id', 'ID');
                 // 级联分类选择：先选一级分类，再选二级分类
-                $builder->select('parentCategoryId', '一级分类')
-                    ->optionModel('blog_category', 'id', 'title', ['pid' => 0])
-                    ->required()
-                    ->listable(false)
+                $builder->display('parentCategoryId', '一级分类')
                     ->hookRendering(function (AbstractField $field, $item, $index) {
-                        // 编辑时，根据二级分类自动设置一级分类
-                        if ($field->renderMode() == FieldRenderMode::FORM && !empty($item->categoryId)) {
-                            $category = ModelUtil::get('blog_category', $item->categoryId);
-                            if ($category && $category['pid'] > 0) {
-                                $field->defaultValue($category['pid']);
+                        if ($field->renderMode() == FieldRenderMode::FORM) {
+                            // 在表单模式下，渲染为select下拉框
+                            $categories = ModelUtil::all('blog_category', ['pid' => 0], ['id', 'title'], ['sort', 'asc']);
+                            $options = [];
+                            $options[''] = '请选择一级分类';
+                            foreach ($categories as $cat) {
+                                $options[$cat['id']] = $cat['title'];
                             }
+                            
+                            $selectedValue = '';
+                            // 编辑时，根据二级分类自动设置一级分类
+                            if (!empty($item->categoryId)) {
+                                $category = ModelUtil::get('blog_category', $item->categoryId);
+                                if ($category && $category['pid'] > 0) {
+                                    $selectedValue = $category['pid'];
+                                }
+                            }
+                            
+                            $html = '<select name="parentCategoryId" class="form-control" required>';
+                            foreach ($options as $value => $label) {
+                                $selected = ($selectedValue == $value) ? ' selected' : '';
+                                $html .= '<option value="'.$value.'"'.$selected.'>'.$label.'</option>';
+                            }
+                            $html .= '</select>';
+                            
+                            return $html;
                         }
-                    })
-                    ->hookValueSerialize(function ($value, AbstractField $field) {
-                        // 这个字段仅用于界面选择，不保存到数据库
-                        // 通过设置column为空字符串来避免保存
-                        $field->column('');
-                        return $value;
                     });
                     
                 $builder->select('categoryId', '二级分类')
@@ -677,8 +688,11 @@ class BlogController extends Controller
             ->gridOperateAppend(ButtonDialogRequest::primary('<i class="iconfont icon-upload"></i> 批量导入', action('\\' . __CLASS__ . '@import')))
             ->pageJumpEnable(true)
             ->hookSaving(function (Form $form) use (&$updatedCategoryIds) {
+                // 从输入数据中获取分类ID
+                $input = InputPackage::buildFromInput();
+                $categoryId = $input->getInteger('categoryId');
+                
                 // 验证必须选择二级分类
-                $categoryId = $form->getItemValue('categoryId');
                 if (empty($categoryId)) {
                     throw new BizException('请选择二级分类');
                 }
