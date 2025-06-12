@@ -624,7 +624,22 @@ class BlogController extends Controller
                     
                 $builder->select('categoryId', '二级分类')
                     ->required()
-                    ->help('请先选择一级分类，然后选择对应的二级分类');
+                    ->help('请先选择一级分类，然后选择对应的二级分类')
+                    ->hookRendering(function (AbstractField $field, $item, $index) {
+                        if ($field->renderMode() == FieldRenderMode::FORM && !empty($item->categoryId)) {
+                            // 编辑时，根据当前选中的二级分类，加载对应的一级分类下的所有二级分类
+                            $currentCategory = ModelUtil::get('blog_category', $item->categoryId);
+                            if ($currentCategory && $currentCategory['pid'] > 0) {
+                                $subcategories = ModelUtil::all('blog_category', ['pid' => $currentCategory['pid']], ['id', 'title'], ['sort', 'asc']);
+                                $options = [];
+                                $options[''] = '请选择二级分类';
+                                foreach ($subcategories as $sub) {
+                                    $options[$sub['id']] = $sub['title'];
+                                }
+                                $field->optionArray($options);
+                            }
+                        }
+                    });
                 $builder->text('title', '标题')
                     ->hookRendering(function (AbstractField $field, $item, $index) {
                         switch ($field->renderMode()) {
