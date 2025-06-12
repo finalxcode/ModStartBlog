@@ -597,6 +597,71 @@ class BlogController extends Controller
                     }, 100);
                 }
             });
+            
+            // 级联分类选择JavaScript逻辑
+            $(document).on("change", "select[name=parentCategoryId]", function() {
+                console.log("一级分类选择改变");
+                var parentId = $(this).val();
+                var $categorySelect = $("select[name=categoryId]");
+                
+                if (!parentId) {
+                    console.log("清空二级分类选项");
+                    $categorySelect.html("<option value=\"\">请先选择一级分类</option>");
+                    return;
+                }
+                
+                console.log("加载二级分类，parentId:", parentId);
+                
+                // 显示加载状态
+                $categorySelect.html("<option value=\"\">加载中...</option>");
+                
+                // 发送AJAX请求获取二级分类
+                $.ajax({
+                    url: "/admin/blog/subcategories/" + parentId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(response) {
+                        console.log("二级分类加载成功:", response);
+                        
+                        if (response.code === 0 && response.data) {
+                            var options = "<option value=\"\">请选择二级分类</option>";
+                            var currentCategoryId = $categorySelect.data("current-value") || $categorySelect.val();
+                            $.each(response.data, function(index, category) {
+                                var selected = (currentCategoryId && currentCategoryId == category.id) ? " selected" : "";
+                                options += "<option value=\"" + category.id + "\"" + selected + ">" + category.title + "</option>";
+                            });
+                            $categorySelect.html(options);
+                        } else {
+                            console.error("二级分类加载失败:", response.msg || "未知错误");
+                            $categorySelect.html("<option value=\"\">加载失败</option>");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX请求失败:", status, error);
+                        $categorySelect.html("<option value=\"\">加载失败</option>");
+                    }
+                });
+            });
+            
+            // 页面加载时，如果有选中的一级分类，自动触发级联加载
+            $(document).ready(function() {
+                setTimeout(function() {
+                    var $parentSelect = $("select[name=parentCategoryId]");
+                    var $categorySelect = $("select[name=categoryId]");
+                    
+                    // 保存当前二级分类的值（编辑模式）
+                    var currentCategoryValue = $categorySelect.val();
+                    if (currentCategoryValue) {
+                        $categorySelect.data("current-value", currentCategoryValue);
+                        console.log("保存当前二级分类值:", currentCategoryValue);
+                    }
+                    
+                    if ($parentSelect.val()) {
+                        console.log("页面加载时触发级联逻辑");
+                        $parentSelect.trigger("change");
+                    }
+                }, 500);
+            });
         ');
 
         $builder
@@ -605,54 +670,50 @@ class BlogController extends Controller
                 /** @var HasFields $builder */
                 $builder->id('id', 'ID');
                 // 级联分类选择：先选一级分类，再选二级分类
-                $builder->display('parentCategoryId', '一级分类')
+                $builder->select('parentCategoryId', '一级分类')
+                    ->help('请先选择一级分类')
+                    ->options(function() {
+                        // 获取所有一级分类
+                        $categories = ModelUtil::all('blog_category', ['pid' => 0], ['id', 'title'], ['sort', 'asc']);
+                        $options = [];
+                        $options[''] = '请选择一级分类';
+                        foreach ($categories as $cat) {
+                            $options[$cat['id']] = $cat['title'];
+                        }
+                        return $options;
+                    })
                     ->hookRendering(function (AbstractField $field, $item, $index) {
                         if ($field->renderMode() == FieldRenderMode::FORM) {
-                            // 在表单模式下，渲染为select下拉框
-                            $categories = ModelUtil::all('blog_category', ['pid' => 0], ['id', 'title'], ['sort', 'asc']);
-                            $options = [];
-                            $options[''] = '请选择一级分类';
-                            foreach ($categories as $cat) {
-                                $options[$cat['id']] = $cat['title'];
-                            }
-                            
-                            $selectedValue = '';
                             // 编辑时，根据二级分类自动设置一级分类
                             if (!empty($item->categoryId)) {
                                 $category = ModelUtil::get('blog_category', $item->categoryId);
                                 if ($category && $category['pid'] > 0) {
-                                    $selectedValue = $category['pid'];
+                                    $field->value($category['pid']);
                                 }
                             }
-                            
-                            $html = '<div class="form-group">';
-                            $html .= '<select name="parentCategoryId" class="form-control" required>';
-                            foreach ($options as $value => $label) {
-                                $selected = ($selectedValue == $value) ? ' selected' : '';
-                                $html .= '<option value="'.htmlspecialchars($value).'"'.$selected.'>'.htmlspecialchars($label).'</option>';
-                            }
-                            $html .= '</select>';
-                            $html .= '</div>';
-                            
-                            return $html;
                         }
                     });
                     
                 $builder->select('categoryId', '二级分类')
                     ->required()
                     ->help('请先选择一级分类，然后选择对应的二级分类')
+                    ->options(['' => '请先选择一级分类'])
                     ->hookRendering(function (AbstractField $field, $item, $index) {
-                        if ($field->renderMode() == FieldRenderMode::FORM && !empty($item->categoryId)) {
-                            // 编辑时，根据当前选中的二级分类，加载对应的一级分类下的所有二级分类
-                            $currentCategory = ModelUtil::get('blog_category', $item->categoryId);
-                            if ($currentCategory && $currentCategory['pid'] > 0) {
-                                $subcategories = ModelUtil::all('blog_category', ['pid' => $currentCategory['pid']], ['id', 'title'], ['sort', 'asc']);
-                                $options = [];
-                                $options[''] = '请选择二级分类';
-                                foreach ($subcategories as $sub) {
-                                    $options[$sub['id']] = $sub['title'];
+                        if ($field->renderMode() == FieldRenderMode::FORM) {
+                            if (!empty($item->categoryId)) {
+                                // 编辑时，根据当前选中的二级分类，加载对应的一级分类下的所有二级分类
+                                $currentCategory = ModelUtil::get('blog_category', $item->categoryId);
+                                if ($currentCategory && $currentCategory['pid'] > 0) {
+                                    $subcategories = ModelUtil::all('blog_category', ['pid' => $currentCategory['pid']], ['id', 'title'], ['sort', 'asc']);
+                                    $options = [];
+                                    $options[''] = '请选择二级分类';
+                                    foreach ($subcategories as $sub) {
+                                        $options[$sub['id']] = $sub['title'];
+                                    }
+                                    $field->options($options);
+                                    // 为JavaScript恢复选中状态提供数据
+                                    $field->attribute('data-current-value', $item->categoryId);
                                 }
-                                $field->optionArray($options);
                             }
                         }
                     });
@@ -770,6 +831,10 @@ class BlogController extends Controller
      */
     public function subcategories($parentId)
     {
+        if (empty($parentId)) {
+            return Response::generate(-1, '请提供一级分类ID');
+        }
+        
         $subcategories = ModelUtil::all('blog_category', ['pid' => $parentId], ['id', 'title'], ['sort', 'asc']);
         
         // 记录日志以便调试
