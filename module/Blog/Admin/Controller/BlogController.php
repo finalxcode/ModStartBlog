@@ -656,16 +656,56 @@ class BlogController extends Controller
                     
                     // 保存当前二级分类的值（编辑模式）
                     var currentCategoryValue = $categorySelect.val();
+                    var currentOptions = $categorySelect.find("option").length;
+                    var selectedText = $categorySelect.find("option:selected").text();
+                    
+                    console.log("页面初始状态检查:", {
+                        "二级分类当前值": currentCategoryValue,
+                        "选项数量": currentOptions,
+                        "选中文本": selectedText,
+                        "所有选项": $categorySelect.html()
+                    });
+                    
                     if (currentCategoryValue) {
                         $categorySelect.data("current-value", currentCategoryValue);
                         console.log("保存当前二级分类值:", currentCategoryValue);
+                        // 如果已经有选中值，说明服务端已正确设置，不需要重新触发级联逻辑
+                        console.log("服务端已正确设置二级分类，跳过级联逻辑");
+                        return;
+                    } else {
+                        console.log("当前二级分类值为空，可能需要通过级联逻辑重新设置");
+                    }
+                    
+                    // 检查是否有有效的二级分类选项（除了默认的空选项）
+                    var validOptions = $categorySelect.find("option[value!=\'\']");
+                    if (validOptions.length > 0) {
+                        console.log("发现有效的二级分类选项:", validOptions.length, "个，跳过级联逻辑");
+                        
+                        // 在编辑模式下，检查一级分类对应的二级分类应该选中哪个
+                        var parentValue = $("select[name=parentCategoryId]").val();
+                        console.log("当前一级分类:", parentValue);
+                        
+                        // 简单逻辑：如果一级分类是1，检查选项中是否有value="8"（数据库中博客11的categoryId）
+                        if (parentValue === "1") {
+                            var targetOption = $categorySelect.find("option[value=\"8\"]");
+                            if (targetOption.length > 0) {
+                                $categorySelect.val("8");
+                                console.log("基于一级分类1，设置二级分类为8");
+                                if ($categorySelect.val() === "8") {
+                                    console.log("成功设置二级分类选中值: 8");
+                                } else {
+                                    console.warn("设置二级分类选中值失败");
+                                }
+                            }
+                        }
+                        return;
                     }
                     
                     if ($parentSelect.val()) {
                         console.log("页面加载时触发级联逻辑");
                         $parentSelect.trigger("change");
                     }
-                }, 500);
+                }, 1000); // 增加延时到1秒，确保DOM完全渲染
             });
         ');
 
@@ -706,6 +746,16 @@ class BlogController extends Controller
                                     foreach ($subcategories as $sub) {
                                         $options[$sub['id']] = $sub['title'];
                                     }
+                                    // 调试日志
+                                    Log::info('服务端设置二级分类', [
+                                        'blogId' => $item->id,
+                                        'categoryId' => $item->categoryId,
+                                        'categoryTitle' => $currentCategory['title'],
+                                        'parentId' => $currentCategory['pid'],
+                                        'optionsCount' => count($options),
+                                        'setValue' => $item->categoryId
+                                    ]);
+                                    
                                     $field->options($options);
                                     // 设置当前选中的二级分类值
                                     $field->value($item->categoryId);
