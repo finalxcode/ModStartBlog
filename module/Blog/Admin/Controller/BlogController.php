@@ -707,6 +707,8 @@ class BlogController extends Controller
                                         $options[$sub['id']] = $sub['title'];
                                     }
                                     $field->options($options);
+                                    // 设置当前选中的二级分类值
+                                    $field->value($item->categoryId);
                                 }
                             }
                         }
