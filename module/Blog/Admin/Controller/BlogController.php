@@ -625,12 +625,17 @@ class BlogController extends Controller
                         
                         if (response.code === 0 && response.data) {
                             var options = "<option value=\"\">请选择二级分类</option>";
-                            var currentCategoryId = $categorySelect.data("current-value") || $categorySelect.val();
+                            var currentCategoryId = $categorySelect.data("current-value") || "";
                             $.each(response.data, function(index, category) {
                                 var selected = (currentCategoryId && currentCategoryId == category.id) ? " selected" : "";
                                 options += "<option value=\"" + category.id + "\"" + selected + ">" + category.title + "</option>";
                             });
                             $categorySelect.html(options);
+                            
+                            // 恢复原选中值
+                            if (currentCategoryId) {
+                                $categorySelect.val(currentCategoryId);
+                            }
                         } else {
                             console.error("二级分类加载失败:", response.msg || "未知错误");
                             $categorySelect.html("<option value=\"\">加载失败</option>");
@@ -672,16 +677,7 @@ class BlogController extends Controller
                 // 级联分类选择：先选一级分类，再选二级分类
                 $builder->select('parentCategoryId', '一级分类')
                     ->help('请先选择一级分类')
-                    ->options(function() {
-                        // 获取所有一级分类
-                        $categories = ModelUtil::all('blog_category', ['pid' => 0], ['id', 'title'], ['sort', 'asc']);
-                        $options = [];
-                        $options[''] = '请选择一级分类';
-                        foreach ($categories as $cat) {
-                            $options[$cat['id']] = $cat['title'];
-                        }
-                        return $options;
-                    })
+                    ->optionModel('blog_category', 'id', 'title', ['pid' => 0])
                     ->hookRendering(function (AbstractField $field, $item, $index) {
                         if ($field->renderMode() == FieldRenderMode::FORM) {
                             // 编辑时，根据二级分类自动设置一级分类
@@ -711,8 +707,6 @@ class BlogController extends Controller
                                         $options[$sub['id']] = $sub['title'];
                                     }
                                     $field->options($options);
-                                    // 为JavaScript恢复选中状态提供数据
-                                    $field->attribute('data-current-value', $item->categoryId);
                                 }
                             }
                         }
