@@ -83,15 +83,29 @@ class BlogController extends Controller
                 
                 var currentCategoryId = $childSelect.val();
                 
-                // 页面加载时，如果已选择二级分类，则加载对应的选项和标签
-                if ($parentSelect.val()) {
-                    loadSubcategories($parentSelect.val(), currentCategoryId);
-                }
-                
-                // 页面加载时，如果已选择二级分类，则更新标签选项
-                if (currentCategoryId) {
-                    updateTagOptions(currentCategoryId);
-                }
+                // 页面加载时的初始化逻辑
+                setTimeout(function() {
+                    // 重新获取当前值，确保DOM完全加载
+                    var parentValue = $parentSelect.val();
+                    var childValue = $childSelect.val();
+                    
+                    console.log("延时初始化检查:", {
+                        parentValue: parentValue,
+                        childValue: childValue,
+                        parentOptions: $parentSelect.find("option").length,
+                        childOptions: $childSelect.find("option").length
+                    });
+                    
+                    // 如果已选择一级分类，则加载对应的二级分类
+                    if (parentValue) {
+                        loadSubcategories(parentValue, childValue);
+                    }
+                    
+                    // 如果已选择二级分类，则更新标签选项
+                    if (childValue) {
+                        updateTagOptions(childValue);
+                    }
+                }, 500); // 延时500ms确保DOM完全渲染
                 
                 function loadSubcategories(parentId, selectedId) {
                     console.log("加载二级分类:", parentId, selectedId);
