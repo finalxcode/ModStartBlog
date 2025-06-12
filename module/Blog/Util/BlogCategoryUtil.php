@@ -16,6 +16,8 @@ class BlogCategoryUtil
     public static function clearCache()
     {
         Cache::forget('Blog:Categories');
+        // 同时清理二级分类标签缓存
+        self::clearSubcategoryTagsCache();
     }
 
     public static function all()
@@ -109,5 +111,97 @@ class BlogCategoryUtil
             }
         }
         self::clearCache();
+    }
+
+    /**
+     * 获取所有二级分类的默认标签
+     * @param int $limit 限制数量，0为不限制
+     * @return array 标签→数量映射
+     */
+    public static function getSubcategoryTags($limit = 0)
+    {
+        $tagCounts = Cache::rememberForever('Blog:SubcategoryTags', function () {
+            // 获取所有二级分类（pid > 0）
+            $subcategories = BlogCategory::where('pid', '>', 0)->get(['id', 'title', 'default_tags'])->toArray();
+            
+            $tagCounts = [];
+            
+            foreach ($subcategories as $category) {
+                if (empty($category['default_tags'])) {
+                    continue;
+                }
+                
+                // 解析标签（支持JSON和逗号分隔两种格式）
+                $tags = self::parseTagsString($category['default_tags']);
+                
+                foreach ($tags as $tag) {
+                    $tag = trim($tag);
+                    if (empty($tag)) {
+                        continue;
+                    }
+                    
+                    // 统计每个标签对应的博客数量
+                    if (!isset($tagCounts[$tag])) {
+                        $tagCounts[$tag] = self::getTagBlogCount($tag);
+                    }
+                }
+            }
+            
+            // 按博客数量降序排序
+            arsort($tagCounts);
+            
+            return $tagCounts;
+        });
+
+        // 应用限制
+        if ($limit > 0) {
+            $tagCounts = array_slice($tagCounts, 0, $limit, true);
+        }
+
+        return $tagCounts;
+    }
+
+    /**
+     * 解析标签字符串，支持JSON和逗号分隔两种格式
+     * @param string $tagsString
+     * @return array
+     */
+    private static function parseTagsString($tagsString)
+    {
+        if (empty($tagsString)) {
+            return [];
+        }
+        
+        // 尝试解析JSON格式
+        if (strpos($tagsString, '[') === 0 || strpos($tagsString, '["') === 0) {
+            $decoded = json_decode($tagsString, true);
+            if (is_array($decoded)) {
+                return array_filter(array_map('trim', $decoded));
+            }
+        }
+        
+        // 按逗号分隔
+        return array_filter(array_map('trim', explode(',', $tagsString)));
+    }
+
+    /**
+     * 获取标签对应的博客数量
+     * @param string $tag
+     * @return int
+     */
+    private static function getTagBlogCount($tag)
+    {
+        // 查询包含该标签的博客数量
+        return Blog::published()
+            ->where('tag', 'like', '%' . $tag . '%')
+            ->count();
+    }
+
+    /**
+     * 清除二级分类标签缓存
+     */
+    public static function clearSubcategoryTagsCache()
+    {
+        Cache::forget('Blog:SubcategoryTags');
     }
 }

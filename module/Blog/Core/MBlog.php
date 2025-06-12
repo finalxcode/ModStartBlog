@@ -618,6 +618,21 @@ class MBlog
     }
 
     /**
+     * @Util 获取所有二级分类的默认标签
+     * @param $limit int 限制数量，0为不限制
+     * @return array 数组，标签→数量映射
+     * @returnExample
+     * {
+     *   "标签1": 5,
+     *   "标签2": 3
+     * }
+     */
+    public static function subcategoryTags($limit = 0)
+    {
+        return BlogCategoryUtil::getSubcategoryTags($limit);
+    }
+
+    /**
      * @Util 获取所有博客标签信息
      * @return array 数组
      * @returnExample
