@@ -625,12 +625,14 @@ class BlogController extends Controller
                                 }
                             }
                             
-                            $html = '<select name="parentCategoryId" class="form-control" required>';
+                            $html = '<div class="form-group">';
+                            $html .= '<select name="parentCategoryId" class="form-control" required>';
                             foreach ($options as $value => $label) {
                                 $selected = ($selectedValue == $value) ? ' selected' : '';
-                                $html .= '<option value="'.$value.'"'.$selected.'>'.$label.'</option>';
+                                $html .= '<option value="'.htmlspecialchars($value).'"'.$selected.'>'.htmlspecialchars($label).'</option>';
                             }
                             $html .= '</select>';
+                            $html .= '</div>';
                             
                             return $html;
                         }
