@@ -1,7 +1,5 @@
 FROM php:7.0-fpm-alpine
 
-RUN mkdir -p /var/www/html && \
-    chown -R www-data:www-data /var/www/html
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -52,4 +50,5 @@ RUN mkdir -p /var/www/html/storage/framework/sessions \
 RUN chown -R 1000:1000 /var/www/html && \
     chmod -R 775 /var/www/html/storage \
     /var/www/html/bootstrap/cache \
-    /var/www/html/public/vendor/captcha
+    /var/www/html/public/vendor/captcha \
+    /var/www/html/vendor
