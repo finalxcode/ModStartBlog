@@ -9,6 +9,7 @@ services:
     platform: linux/amd64
     volumes:
       - .:/var/www/html
+      - ./storage/:/var/www/html/storage/:rw,z
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
