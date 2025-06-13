@@ -1,5 +1,8 @@
 FROM php:7.0-fpm-alpine
 
+RUN mkdir -p /var/www/html && \
+    chown -R www-data:www-data /var/www/html
+
 # Install system dependencies
 RUN apk add --no-cache \
     git \
