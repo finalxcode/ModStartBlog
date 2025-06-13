@@ -53,3 +53,6 @@ RUN chown -R www-data:www-data /var/www/html/storage \
 RUN chmod -R 775 /var/www/html/storage \
     /var/www/html/bootstrap/cache \
     /var/www/html/public/vendor/captcha
+
+RUN chown -R www-data:www-data /var/www/html/vendor && \
+    chmod -R 775 /var/www/html/vendor
