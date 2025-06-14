@@ -51,4 +51,7 @@ RUN chown -R 1000:1000 /var/www/html && \
     chmod -R 775 /var/www/html/storage \
     /var/www/html/bootstrap/cache \
     /var/www/html/public/vendor/captcha \
-    /var/www/html/vendor
+    /var/www/html/vendor && \
+    chmod -R 775 /var/www/html/storage/framework \
+    /var/www/html/storage/logs \
+    /var/www/html/storage/app
