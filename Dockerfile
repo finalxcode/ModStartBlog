@@ -3,9 +3,6 @@ FROM php:7.0-fpm-alpine
 RUN echo "php_admin_flag[log_errors] = on" >> /usr/local/etc/php-fpm.d/www.conf && \
     echo "php_admin_value[error_log] = /var/log/php/php-fpm.log" >> /usr/local/etc/php-fpm.d/www.conf
 
-RUN addgroup -g 1000 ubuntu && \
-adduser -u 1000 -G ubuntu -h /home/ubuntu -D ubuntu
-
 # Install system dependencies
 RUN apk add --no-cache \
     git \
@@ -52,7 +49,7 @@ RUN mkdir -p /var/www/html/storage/framework/sessions \
     /var/www/html/bootstrap/cache \
     /var/www/html/public/vendor/captcha/fonts
 
-RUN chown -R ubuntu:ubuntu /var/www/html && \
+RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html/storage \
     /var/www/html/bootstrap/cache \
     /var/www/html/public/vendor/captcha \

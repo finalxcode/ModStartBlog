@@ -2,7 +2,7 @@ version: '3'
 
 services:
   php:
-    user: "ubuntu:ubuntu"
+    user: "www-data:www-data"
     build:
       context: .
       dockerfile: Dockerfile
