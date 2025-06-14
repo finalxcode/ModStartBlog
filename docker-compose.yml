@@ -10,6 +10,7 @@ services:
     volumes:
       - .:/var/www/html:rw
       - ./storage/:/var/www/html/storage/:rw
+      - ./php.ini:/usr/local/etc/php/php.ini:ro
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
