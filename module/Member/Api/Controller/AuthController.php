@@ -1174,7 +1174,7 @@ class AuthController extends BaseController
                 'zipCode' => 'required|string',
                 'address' => 'required|string',
                 'email' => 'required|string|email|unique:member_user,email',
-                'website' => 'required|string|url|max:255'
+                'website' => 'nullable|string|url|max:255'
             ];
             $messages = [
                 'username.required' => '请输入用户名',
@@ -1201,7 +1201,6 @@ class AuthController extends BaseController
                 'email.email' => '请输入正确的邮箱格式',
                 'email.unique' => '该邮箱已被注册',
                 'website.url' => '请输入正确的网站地址',
-                'website.nullable' => '网站地址可以为空'
             ];
         } else {
             // 未知注册类型
