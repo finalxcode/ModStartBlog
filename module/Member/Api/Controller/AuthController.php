@@ -1091,7 +1091,7 @@ class AuthController extends BaseController
                 'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone',
                 'verify_code' => 'required|string',
                 'password' => 'required|string|min:6',
-                'sports' => 'nullable|array',
+                'sports' => 'sometimes|array',
             ];
             $messages = [
                 'phone.required' => '请输入手机号',
