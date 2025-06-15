@@ -1088,18 +1088,23 @@ class AuthController extends BaseController
         if ($registerType === 'personal') {
             // 个人注册验证规则
             $rules = [
-                'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone',
-                'verify_code' => 'required|string',
+                'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member_user,phone',
+                'phoneVerify' => 'required|string',
                 'password' => 'required|string|min:6',
+                'passwordRepeat' => 'required|string|same:password',
                 'sports' => 'sometimes|array',
+                'captcha' => 'required|string',
             ];
             $messages = [
                 'phone.required' => '请输入手机号',
                 'phone.regex' => '请输入正确的手机号格式',
                 'phone.unique' => '该手机号已被注册',
-                'verify_code.required' => '请输入验证码',
+                'phoneVerify.required' => '请输入手机验证码',
                 'password.required' => '请输入密码',
                 'password.min' => '密码长度至少为6位',
+                'passwordRepeat.required' => '请重复输入密码',
+                'passwordRepeat.same' => '两次输入的密码不一致',
+                'captcha.required' => '请输入图片验证码',
             ];
         } elseif ($registerType === 'expert') {
             // 专家注册验证规则
@@ -1136,17 +1141,15 @@ class AuthController extends BaseController
                 'captcha.required' => '请输入图片验证码',
             ];
 
-            // Add phone/email verification if enabled in config
-            if (modstart_config('registerPhoneEnable')) {
-                $rules['phone'] = 'required|string|regex:/^1[3-9]\d{9}$/|unique:member,phone';
-                $rules['phoneVerify'] = 'required|string';
-                $messages['phone.required'] = '请输入手机号';
-                $messages['phone.regex'] = '请输入正确的手机号格式';
-                $messages['phone.unique'] = '该手机号已被注册';
-                $messages['phoneVerify.required'] = '请输入手机验证码';
-            }
+            // 大神入驻必须验证手机号
+            $rules['phone'] = 'required|string|regex:/^1[3-9]\d{9}$/|unique:member_user,phone';
+            $rules['phoneVerify'] = 'required|string';
+            $messages['phone.required'] = '请输入手机号';
+            $messages['phone.regex'] = '请输入正确的手机号格式';
+            $messages['phone.unique'] = '该手机号已被注册';
+            $messages['phoneVerify.required'] = '请输入手机验证码';
             if (modstart_config('registerEmailEnable')) {
-                $rules['email'] = 'required|string|email|unique:member,email';
+                $rules['email'] = 'required|string|email|unique:member_user,email';
                 $rules['emailVerify'] = 'required|string';
                 $messages['email.required'] = '请输入邮箱';
                 $messages['email.email'] = '请输入正确的邮箱格式';
@@ -1171,6 +1174,7 @@ class AuthController extends BaseController
                 'contactPosition' => 'required|string',
                 'telephone' => 'required|string',
                 'phone' => 'required|string|regex:/^1[3-9]\d{9}$/|unique:member_user,phone',
+                'phoneVerify' => 'required|string',
                 'zipCode' => 'required|string',
                 'address' => 'required|string',
                 'email' => 'required|string|email|unique:member_user,email',
@@ -1195,6 +1199,7 @@ class AuthController extends BaseController
                 'phone.required' => '请输入手机号',
                 'phone.regex' => '请输入正确的手机号格式',
                 'phone.unique' => '该手机号已被注册',
+                'phoneVerify.required' => '请输入手机验证码',
                 'zipCode.required' => '请输入邮政编码',
                 'address.required' => '请输入通讯地址',
                 'email.required' => '请输入邮箱',
@@ -1214,6 +1219,42 @@ class AuthController extends BaseController
                 'msg' => '表单校验失败',
                 'errors' => $validator->errors(),
             ]);
+        }
+
+        // 验证手机验证码（个人注册、大神入驻和企业注册）
+        if (in_array($registerType, ['personal', 'expert', 'enterprise'])) {
+            $phone = $form->get('phone');
+            $phoneVerify = $form->get('phoneVerify');
+            
+            if (empty($phoneVerify)) {
+                return response()->json([
+                    'code' => -1,
+                    'msg' => '请输入手机验证码',
+                ]);
+            }
+            
+            $phoneVerifyCheck = Session::get('registerPhoneVerify');
+            if ($phoneVerify != $phoneVerifyCheck) {
+                Log::info('Member.Register.PhoneVerifyError - ' . $phoneVerify . ' - ' . $phoneVerifyCheck);
+                return response()->json([
+                    'code' => -1,
+                    'msg' => '手机验证码不正确',
+                ]);
+            }
+            
+            if (Session::get('registerPhoneVerifyTime') + 60 * 60 < time()) {
+                return response()->json([
+                    'code' => -1,
+                    'msg' => '手机验证码已过期',
+                ]);
+            }
+            
+            if ($phone != Session::get('registerPhone')) {
+                return response()->json([
+                    'code' => -1,
+                    'msg' => '两次手机不一致',
+                ]);
+            }
         }
 
         // 创建用户
@@ -1296,6 +1337,13 @@ class AuthController extends BaseController
             }
         }
 
+        // 清除验证码Session
+        if (in_array($registerType, ['personal', 'expert', 'enterprise'])) {
+            Session::forget('registerPhoneVerify');
+            Session::forget('registerPhoneVerifyTime');
+            Session::forget('registerPhone');
+        }
+
         // 登录用户
         \Module\Blog\Member\Auth\MemberUser::login($member);
 
@@ -1364,9 +1412,9 @@ class AuthController extends BaseController
         if (modstart_config('registerDisable', false)) {
             return Response::generate(-1, '禁止注册');
         }
-        if (!modstart_config('registerPhoneEnable')) {
-            return Response::generate(-1, '注册未开启手机');
-        }
+//        if (!modstart_config('registerPhoneEnable')) {
+//            return Response::generate(-1, '注册未开启手机');
+//        }
         $input = InputPackage::buildFromInput();
 
         $phone = $input->getPhone('target');
@@ -1374,12 +1422,12 @@ class AuthController extends BaseController
             return Response::generate(-1, '手机不能为空');
         }
 
-        if (!Session::get('registerCaptchaPass', false)) {
-            return Response::generate(-1, '请先进行安全验证');
-        }
-        if (!SessionUtil::atomicConsume('registerCaptchaPassCount')) {
-            return Response::generate(-1, '请进行安全验证');
-        }
+//        if (!Session::get('registerCaptchaPass', false)) {
+//            return Response::generate(-1, '请先进行安全验证');
+//        }
+//        if (!SessionUtil::atomicConsume('registerCaptchaPassCount')) {
+//            return Response::generate(-1, '请进行安全验证');
+//        }
 
         $memberUser = MemberUtil::getByPhone($phone);
         if (!empty($memberUser)) {
@@ -1525,9 +1573,9 @@ class AuthController extends BaseController
      */
     public function oauthBindPhoneVerify()
     {
-        if (!modstart_config('Member_OauthBindPhoneEnable')) {
-            return Response::generate(-1, '注册未开启手机');
-        }
+//        if (!modstart_config('Member_OauthBindPhoneEnable')) {
+//            return Response::generate(-1, '注册未开启手机');
+//        }
         $input = InputPackage::buildFromInput();
 
         $phone = $input->getPhone('target');

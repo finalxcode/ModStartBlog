@@ -458,6 +458,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="line">
                         <div class="field">
                             <input type="text" class="form-lg" name="username" placeholder="用户名" value="test_user_personal" />
@@ -471,6 +472,26 @@
                     <div class="line">
                         <div class="field">
                             <input type="password" class="form-lg" name="passwordRepeat" placeholder="重复密码" value="password123" />
+                        </div>
+                    </div>
+
+                    <div class="line">
+                        <div class="field">
+                            <div class="row no-gutters">
+                                <div class="col-7">
+                                    <input type="text" class="form-lg" name="phone" placeholder="输入手机号" value="13800138001" />
+                                </div>
+                                <div class="col-5">
+                                    <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-generate>获取验证码</button>
+                                    <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-countdown style="display:none;margin:0;"></button>
+                                    <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-regenerate style="display:none;margin:0;">重新获取</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="line">
+                        <div class="field">
+                            <input type="text" class="form-lg" name="phoneVerify" placeholder="手机验证码" />
                         </div>
                     </div>
 
@@ -497,27 +518,7 @@
                             </div>
                         </div>
                     </div>
-                    @if(modstart_config('registerPhoneEnable'))
-                        <div class="line">
-                            <div class="field">
-                                <div class="row no-gutters">
-                                    <div class="col-7">
-                                        <input type="text" class="form-lg" name="phone" placeholder="输入手机" value="13800138000" />
-                                    </div>
-                                    <div class="col-5">
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-generate>获取验证码</button>
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-countdown style="display:none;margin:0;"></button>
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-regenerate style="display:none;margin:0;">重新获取</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="line">
-                            <div class="field">
-                                <input type="text" class="form-lg" name="phoneVerify" placeholder="手机验证码" />
-                            </div>
-                        </div>
-                    @endif
+
                     @if(modstart_config('registerEmailEnable'))
                         <div class="line">
                             <div class="field">
@@ -696,27 +697,25 @@
                             </div>
                         </div>
                     </div>
-                    @if(modstart_config('registerPhoneEnable'))
-                        <div class="line">
-                            <div class="field">
-                                <div class="row no-gutters">
-                                    <div class="col-7">
-                                        <input type="text" class="form-lg" name="phone" placeholder="输入手机" />
-                                    </div>
-                                    <div class="col-5">
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-generate>获取验证码</button>
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-countdown style="display:none;margin:0;"></button>
-                                        <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-regenerate style="display:none;margin:0;">重新获取</button>
-                                    </div>
+                    <div class="line">
+                        <div class="field">
+                            <div class="row no-gutters">
+                                <div class="col-7">
+                                    <input type="text" class="form-lg" name="phone" placeholder="输入手机号" value="13800138002" />
+                                </div>
+                                <div class="col-5">
+                                    <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-generate>获取验证码</button>
+                                    <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-countdown style="display:none;margin:0;"></button>
+                                    <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-regenerate style="display:none;margin:0;">重新获取</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="line">
-                            <div class="field">
-                                <input type="text" class="form-lg" name="phoneVerify" placeholder="手机验证码" />
-                            </div>
+                    </div>
+                    <div class="line">
+                        <div class="field">
+                            <input type="text" class="form-lg" name="phoneVerify" placeholder="手机验证码" />
                         </div>
-                    @endif
+                    </div>
 
                     <div class="line">
                         <div class="field">
@@ -874,14 +873,7 @@
                             </div>
                         </div>
 
-                        <div class="line">
-                            <div class="field">
-                                <label><span class="required">*</span>手机</label>
-                                <div class="field-content">
-                                    <input type="tel" class="form-lg" name="phone" required value="13900139000" />
-                                </div>
-                            </div>
-                        </div>
+                        
 
                         <div class="line">
                             <div class="field">
@@ -918,6 +910,34 @@
                                 </div>
                             </div>
                         </div>
+
+
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>手机</label>
+                                <div class="field-content">
+                                    <div class="row no-gutters">
+                                        <div class="col-7">
+                                            <input type="text" class="form-lg" name="phone" placeholder="输入手机号" value="13800138001" />
+                                        </div>
+                                        <div class="col-5">
+                                            <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-generate>获取验证码</button>
+                                            <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-countdown style="display:none;margin:0;"></button>
+                                            <button class="btn btn-round btn-lg btn-block" type="button" data-phone-verify-regenerate style="display:none;margin:0;">重新获取</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="line">
+                            <div class="field">
+                                <label><span class="required">*</span>手机验证码</label>
+                                <div class="field-content">
+                                    <input type="text" class="form-lg" name="phoneVerify" placeholder="手机验证码" />
+                                </div>
+                            </div>
+                        </div>
+
 
                         <div class="line">
                             <div class="field">
