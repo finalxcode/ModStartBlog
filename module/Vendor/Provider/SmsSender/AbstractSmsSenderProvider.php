@@ -13,5 +13,14 @@ abstract class AbstractSmsSenderProvider
 {
     abstract public function name();
 
+    /**
+     * 获取提供商的显示标题
+     * @return string
+     */
+    public function title()
+    {
+        return $this->name();
+    }
+
     abstract public function send($phone, $template, $templateData, $param = []);
 }

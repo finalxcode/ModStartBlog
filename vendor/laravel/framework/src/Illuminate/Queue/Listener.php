@@ -37,6 +37,9 @@ class Listener
      */
     protected $maxTries = 0;
 
+
+    protected $workMaxJobs = 0;
+
     /**
      * The queue worker command line.
      *
@@ -161,6 +164,10 @@ class Listener
             $this->maxTries
         );
 
+        if($this->workMaxJobs>0){
+            $command .= " --max-jobs={$this->workMaxJobs}";
+        }
+
         return new Process($command, $this->commandPath, null, null, $timeout);
     }
 
@@ -262,4 +269,13 @@ class Listener
     {
         $this->maxTries = $tries;
     }
+
+    /**
+     * @param int $workMaxJobs
+     */
+    public function setWorkMaxJobs($workMaxJobs)
+    {
+        $this->workMaxJobs = $workMaxJobs;
+    }
+
 }

@@ -76,10 +76,11 @@ class Worker
      * @param  int     $maxTries
      * @return array
      */
-    public function daemon($connectionName, $queue = null, $delay = 0, $memory = 128, $sleep = 3, $maxTries = 0)
+    public function daemon($connectionName, $queue = null, $delay = 0, $memory = 128, $sleep = 3, $maxTries = 0, $maxJobs =0)
     {
         $lastRestart = $this->getTimestampOfLastQueueRestart();
 
+        $jobIndex = 0;
         while (true) {
             if ($this->daemonShouldRun()) {
                 $this->runNextJobForDaemon(
@@ -87,6 +88,11 @@ class Worker
                 );
             } else {
                 $this->sleep($sleep);
+            }
+
+            $jobIndex++;
+            if($maxJobs>0 && $jobIndex>=$maxJobs){
+                $this->stop();
             }
 
             if ($this->memoryExceeded($memory) || $this->queueShouldRestart($lastRestart)) {

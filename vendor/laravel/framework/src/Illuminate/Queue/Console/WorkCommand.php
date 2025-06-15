@@ -94,12 +94,14 @@ class WorkCommand extends Command
             $this->laravel['Illuminate\Contracts\Debug\ExceptionHandler']
         );
 
-        if ($daemon) {
+        $maxJobs = intval($this->option('max-jobs'));
+        if ($daemon || $maxJobs > 0) {
             $this->worker->setCache($this->laravel['cache']->driver());
 
             return $this->worker->daemon(
                 $connection, $queue, $delay, $memory,
-                $this->option('sleep'), $this->option('tries')
+                $this->option('sleep'), $this->option('tries'),
+                $maxJobs
             );
         }
 
@@ -172,6 +174,8 @@ class WorkCommand extends Command
             ['sleep', null, InputOption::VALUE_OPTIONAL, 'Number of seconds to sleep when no job is available', 3],
 
             ['tries', null, InputOption::VALUE_OPTIONAL, 'Number of times to attempt a job before logging it failed', 0],
+
+            ['max-jobs', null, InputOption::VALUE_OPTIONAL, 'The maximum number of jobs to run', 100],
         ];
     }
 }
